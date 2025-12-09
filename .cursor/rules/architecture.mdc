@@ -1,0 +1,45 @@
+# Architecture Rules
+
+Use these when building or modifying the app so a new contributor can ramp quickly.
+
+## Module Structure (NestJS modular monolith)
+- Modules live in `src/{module}/` with clear boundaries; no cross-importing internals.
+- Standard layout per module:
+  - `entities/` (TypeORM), `dto/` (request/response), `services/` (business logic),
+    `controllers/` (HTTP), `tests/` (unit/integration).
+- Depend on interfaces/contracts; keep DI-friendly and avoid circular deps.
+
+## Core Modules in this app
+- `identity` (users), `systems` (systems/instances/tiers), `ownership` (system owners),
+  `access-control` (grants, bulk upload, CSV parser), `auth` (demo JWT).
+- API prefix: `/api/v1`. DB: Postgres via TypeORM. Static UI: `index.html`, `dashboard.html` served by Nest.
+- CORS enabled for local dev; do not break file uploads (let the browser set multipart boundaries).
+- Serve UI from the same origin (`http://localhost:3000`) to avoid mixed-content/CORS issues; never rely on `file://`.
+
+## Data + Business Logic
+- Repositories only for persistence; all business rules live in services.
+- Transactions for multi-step writes when consistency matters.
+- Validation via DTOs; allow service-level validation where detailed errors are needed (e.g., bulk CSV).
+
+## Access Grants + Bulk Upload
+- Endpoints:
+  - `POST /api/v1/access-grants` (single)
+  - `POST /api/v1/access-grants/bulk` (JSON grid)
+  - `POST /api/v1/access-grants/bulk/csv` (CSV upload)
+  - `GET /api/v1/access-grants/bulk/csv/template`
+- CSV parser resolves users/systems/instances/tiers; service creates users if missing, guards duplicates,
+  returns full relations for audit log.
+- Seed data: keep only core users in seeds; sample/import-only users must come via CSV to avoid index drift.
+
+## Error Handling & Logging
+- Consistent error shapes; use Nest exceptions.
+- Log meaningful context; for uploads, log file meta and validation counts.
+
+## Documentation & Decisions
+- Keep `docs/ARCHITECTURE.md` and `docs/DECISIONS.md` in sync with changes; add ADRs for significant shifts.
+- Before changing flows/features, skim relevant `docs/` (PRD, PHASES, DECISIONS, TEST_STRATEGY) and align edits.
+- PRD expectations (Phase 1) drive acceptance (access overview visibility, duplicate prevention, audit trail).
+
+## Future-proofing
+- Keep modules independent to allow later extraction to services.
+- Favor events/hooks over tight coupling for cross-module needs (future phases).

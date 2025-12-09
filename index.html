@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Corolla - Access Management</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        :root {
+            --background: #ffffff;
+            --foreground: #000000;
+            --card: #f5f5f5;
+            --border: #e5e5e5;
+            --primary: #000000;
+            --primary-foreground: #ffffff;
+            --secondary: #e5e5e5;
+            --muted: #999999;
+            --muted-foreground: #666666;
+            --input: #f5f5f5;
+            --destructive: #ff3b30;
+            --accent: #0071e3;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: var(--background);
+            color: var(--foreground);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        .login-container {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 450px;
+        }
+        .logo-section {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .logo-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--primary);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 12px;
+        }
+        .logo-icon svg {
+            width: 24px;
+            height: 24px;
+            color: var(--primary-foreground);
+        }
+        h1 {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            color: var(--foreground);
+        }
+        .subtitle {
+            font-size: 14px;
+            color: var(--muted-foreground);
+        }
+        .login-card {
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .section-desc {
+            font-size: 14px;
+            color: var(--muted-foreground);
+            margin-bottom: 24px;
+        }
+        .demo-section {
+            margin-bottom: 24px;
+        }
+        .demo-label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--muted-foreground);
+            margin-bottom: 12px;
+        }
+        .demo-user-btn {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--background);
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            margin-bottom: 8px;
+            color: var(--foreground);
+        }
+        .demo-user-btn:hover {
+            border-color: var(--foreground);
+        }
+        .demo-user-btn.selected {
+            background: var(--primary);
+            color: var(--primary-foreground);
+            border-color: var(--primary);
+        }
+        .demo-user-btn.selected * {
+            color: var(--primary-foreground) !important;
+        }
+        .demo-user-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .demo-user-info h3 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .demo-user-info p {
+            font-size: 12px;
+            color: var(--muted-foreground);
+            margin-bottom: 0;
+        }
+        .demo-user-btn.selected .demo-user-info h3,
+        .demo-user-btn.selected .demo-user-info p {
+            color: var(--primary-foreground);
+        }
+        .role-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+            background: transparent;
+            color: var(--muted-foreground);
+            margin-top: 4px;
+            border: 1px solid var(--border);
+        }
+        .demo-user-btn.selected .role-badge {
+            background: rgba(255, 255, 255, 0.2);
+            color: var(--primary-foreground);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+        .selected-indicator {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--primary-foreground);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .selected-indicator::after {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--primary);
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+        input {
+            width: 100%;
+            padding: 10px 12px;
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--foreground);
+            font-size: 14px;
+            font-family: inherit;
+            transition: all 0.15s ease;
+        }
+        input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.1);
+        }
+        input::placeholder {
+            color: var(--muted-foreground);
+        }
+        .submit-btn {
+            width: 100%;
+            padding: 10px 16px;
+            background: var(--primary);
+            color: var(--primary-foreground);
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+            transition: opacity 0.15s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .submit-btn:hover {
+            opacity: 0.9;
+        }
+        .submit-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .demo-note {
+            font-size: 12px;
+            text-align: center;
+            color: var(--muted-foreground);
+            margin-top: 16px;
+        }
+        .error-message {
+            background: rgba(255, 59, 48, 0.1);
+            border: 1px solid rgba(255, 59, 48, 0.2);
+            color: var(--destructive);
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            display: none;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo-section">
+            <div class="logo-icon">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                </svg>
+            </div>
+            <h1>Corolla</h1>
+            <p class="subtitle">Access Management System</p>
+        </div>
+
+        <div class="login-card">
+            <div class="error-message" id="error-message"></div>
+
+            <h2 class="section-title">Sign in to your account</h2>
+            <p class="section-desc">Enter your email and password to continue</p>
+
+            <form id="login-form" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" placeholder="Enter email" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" placeholder="Enter password" required>
+                </div>
+
+                <button type="submit" class="submit-btn">
+                    Sign In
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000';
+
+        async function handleLogin(event) {
+            event.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value || '';
+            const errorDiv = document.getElementById('error-message');
+            const submitBtn = event.target.querySelector('.submit-btn');
+            
+            if (!email) {
+                errorDiv.textContent = 'Please enter an email address';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            
+            errorDiv.style.display = 'none';
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Signing in...';
+
+            try {
+                const loginResponse = await fetch(`${API_BASE}/api/v1/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+                
+                const loginData = await loginResponse.json();
+                
+                if (!loginResponse.ok) {
+                    throw new Error(loginData.message || 'Invalid email or password');
+                }
+                
+                if (!loginData.token) {
+                    throw new Error('No token received from server');
+                }
+                
+                // Get user info
+                const meResponse = await fetch(`${API_BASE}/api/v1/auth/me?token=${encodeURIComponent(loginData.token)}`);
+                const userData = await meResponse.json();
+                
+                if (!meResponse.ok) {
+                    throw new Error('Failed to get user information');
+                }
+                
+                // Store token and user info
+                localStorage.setItem('authToken', loginData.token);
+                localStorage.setItem('currentUser', JSON.stringify(userData));
+                
+                // Redirect to dashboard
+                window.location.href = 'dashboard.html';
+                
+            } catch (error) {
+                errorDiv.textContent = error.message || 'Login failed. Please try again.';
+                errorDiv.style.display = 'block';
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = 'Sign In <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>';
+            }
+        }
+    </script>
+</body>
+</html>

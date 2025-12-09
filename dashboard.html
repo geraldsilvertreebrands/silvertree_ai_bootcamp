@@ -1,0 +1,2500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Corolla</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        :root {
+            --background: #ffffff;
+            --foreground: #000000;
+            --card: #f5f5f5;
+            --card-foreground: #000000;
+            --popover: #ffffff;
+            --popover-foreground: #000000;
+            --primary: #000000;
+            --primary-foreground: #ffffff;
+            --secondary: #e5e5e5;
+            --secondary-foreground: #000000;
+            --muted: #999999;
+            --muted-foreground: #666666;
+            --accent: #0071e3;
+            --accent-foreground: #ffffff;
+            --destructive: #ff3b30;
+            --destructive-foreground: #ffffff;
+            --border: #e5e5e5;
+            --input: #f5f5f5;
+            --ring: #0071e3;
+            --radius: 0.375rem;
+            --sidebar: #f5f5f5;
+            --sidebar-foreground: #000000;
+            --sidebar-primary: #000000;
+            --sidebar-primary-foreground: #ffffff;
+            --sidebar-accent: #e5e5e5;
+            --sidebar-accent-foreground: #000000;
+            --sidebar-border: #e5e5e5;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: var(--background);
+            color: var(--foreground);
+            height: 100vh;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        .app-container {
+            display: flex;
+            height: 100vh;
+        }
+        /* Sidebar */
+        .sidebar {
+            width: 224px;
+            background: var(--sidebar);
+            border-right: 1px solid var(--sidebar-border);
+            display: flex;
+            flex-direction: column;
+            transition: width 0.3s ease;
+        }
+        .sidebar.collapsed {
+            width: 64px;
+        }
+        .sidebar-header {
+            padding: 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--primary);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .logo-icon span {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--primary-foreground);
+        }
+        .logo-text h1 {
+            font-size: 18px;
+            font-weight: 700;
+        }
+        .logo-text p {
+            font-size: 11px;
+            color: var(--muted-foreground);
+        }
+        .sidebar-toggle {
+            padding: 8px;
+            background: transparent;
+            border: none;
+            color: var(--foreground);
+            cursor: pointer;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+        .sidebar-toggle:hover {
+            background: var(--muted);
+        }
+        .nav {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+        }
+        .nav-item {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: 6px;
+            background: transparent;
+            border: none;
+            color: var(--sidebar-foreground);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 2px;
+            text-align: left;
+        }
+        .nav-item:hover {
+            background: var(--sidebar-accent);
+        }
+        .nav-item.active {
+            background: var(--sidebar-primary);
+            color: var(--sidebar-primary-foreground);
+        }
+        .nav-item svg {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+        .sidebar-footer {
+            padding: 16px;
+            border-top: 1px solid var(--border);
+        }
+        .user-info-card {
+            padding: 12px;
+            background: transparent;
+            border-radius: 6px;
+            margin-bottom: 12px;
+        }
+        .user-info-card p {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--muted-foreground);
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .user-info-card .name {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .user-info-card .role {
+            font-size: 12px;
+            color: var(--muted-foreground);
+            font-weight: 500;
+            text-transform: capitalize;
+        }
+        .logout-btn {
+            width: 100%;
+            padding: 6px 12px;
+            background: transparent;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: var(--destructive);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+        .logout-btn svg {
+            width: 14px;
+            height: 14px;
+        }
+        .logout-btn:hover {
+            background: rgba(239, 68, 68, 0.1);
+        }
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .header {
+            padding: 16px 32px;
+            border-bottom: 1px solid var(--border);
+            background: var(--card);
+        }
+        .header h2 {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .header p {
+            font-size: 14px;
+            color: var(--muted-foreground);
+        }
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 32px;
+        }
+        .content-wrapper {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        /* Hide collapsed text */
+        .sidebar.collapsed .logo-text,
+        .sidebar.collapsed .nav-item span:not(.icon-only),
+        .sidebar.collapsed .user-info-card,
+        .sidebar.collapsed .logout-btn span {
+            display: none;
+        }
+        .sidebar.collapsed .nav-item {
+            justify-content: center;
+        }
+        /* View Styles */
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 16px;
+        }
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.15s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-family: inherit;
+        }
+        .btn-primary {
+            background: var(--primary);
+            color: var(--primary-foreground);
+        }
+        .btn-primary:hover {
+            opacity: 0.9;
+        }
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--foreground);
+        }
+        .btn-outline:hover {
+            background: var(--secondary);
+        }
+        .btn-destructive {
+            background: transparent;
+            color: var(--destructive);
+            border: 1px solid rgba(255, 69, 58, 0.2);
+        }
+        .btn-destructive:hover {
+            background: rgba(255, 69, 58, 0.1);
+        }
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+        .form-group select,
+        .form-group input {
+            width: 100%;
+            padding: 10px 12px;
+            background: var(--input);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--foreground);
+            font-size: 14px;
+            font-family: inherit;
+        }
+        .form-group select:focus,
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--ring);
+            box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.1);
+        }
+        .search-box {
+            position: relative;
+            margin-bottom: 16px;
+        }
+        .search-box svg {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 16px;
+            height: 16px;
+            color: var(--muted-foreground);
+        }
+        .search-box input {
+            width: 100%;
+            padding: 10px 10px 10px 36px;
+            background: var(--input);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--foreground);
+        }
+        .user-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 12px;
+        }
+        .user-header {
+            padding: 16px;
+            background: transparent;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: background 0.15s ease;
+            border-bottom: 1px solid var(--border);
+        }
+        .user-header:hover {
+            background: var(--secondary);
+        }
+        .user-info h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .user-info p {
+            font-size: 14px;
+            color: var(--muted-foreground);
+        }
+        .grant-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            background: var(--secondary);
+            color: var(--muted-foreground);
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .user-details {
+            padding: 16px;
+            border-top: 1px solid var(--border);
+        }
+        .grant-item {
+            padding: 12px;
+            background: var(--secondary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+        .grant-item .btn {
+            white-space: nowrap;
+            min-width: auto;
+        }
+        .grant-info p {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+        .grant-info span {
+            font-size: 12px;
+            color: var(--muted-foreground);
+        }
+        .success-message {
+            text-align: center;
+            padding: 48px;
+        }
+        .success-message svg {
+            width: 48px;
+            height: 48px;
+            color: #10b981;
+            margin: 0 auto 16px;
+        }
+        .audit-entry {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+        .audit-entry.add {
+            background: rgba(34, 197, 94, 0.1);
+            border-left: 3px solid #22c55e;
+        }
+        .audit-entry.remove,
+        .audit-entry.delete {
+            background: rgba(255, 69, 58, 0.1);
+            border-left: 3px solid #ff453a;
+        }
+        .audit-entry.edit {
+            background: rgba(10, 132, 255, 0.1);
+            border-left: 3px solid #0a84ff;
+        }
+        .audit-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-right: 8px;
+        }
+        .audit-badge.add {
+            background: #22c55e;
+            color: white;
+        }
+        .audit-badge.edit {
+            background: #0a84ff;
+            color: white;
+        }
+        .audit-badge.remove,
+        .audit-badge.delete {
+            background: #ff453a;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-container">
+                    <div class="logo-icon">
+                        <span>C</span>
+                    </div>
+                    <div class="logo-text">
+                        <h1>Corolla</h1>
+                        <p>Access Manager</p>
+                    </div>
+                </div>
+                <button class="sidebar-toggle" onclick="toggleSidebar()">
+                    <svg id="toggle-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <nav class="nav">
+                <button class="nav-item active" onclick="switchView('users')">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                    </svg>
+                    <span>Users</span>
+                </button>
+                <button class="nav-item" onclick="switchView('overview')">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+                    </svg>
+                    <span>Access Overview</span>
+                </button>
+                <button class="nav-item" onclick="switchView('log')">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    <span>Log Access</span>
+                </button>
+                <button class="nav-item" onclick="switchView('audit')">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    <span>Audit Log</span>
+                </button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-info-card" id="user-info-card">
+                    <p>Logged in as</p>
+                    <div class="name" id="user-name">Loading...</div>
+                    <div class="role" id="user-role">-</div>
+                </div>
+                <button class="logout-btn" onclick="logout()">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                    </svg>
+                    <span>Sign Out</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="header">
+                <h2 id="page-title">Users & Access</h2>
+                <p id="page-description">Manage users and their system access</p>
+            </header>
+
+            <div class="content-area">
+                <div class="content-wrapper">
+                    <div id="view-container">
+                        <!-- Views will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000';
+        let currentUser = null;
+        let currentView = 'users';
+        let sidebarOpen = true;
+
+        // Check authentication
+        window.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('authToken');
+            const userStr = localStorage.getItem('currentUser');
+            
+            if (!token || !userStr) {
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            currentUser = JSON.parse(userStr);
+            document.getElementById('user-name').textContent = currentUser.name || currentUser.email;
+            document.getElementById('user-role').textContent = currentUser.role || 'user';
+            
+            loadView('users');
+        });
+
+        function toggleSidebar() {
+            sidebarOpen = !sidebarOpen;
+            const sidebar = document.getElementById('sidebar');
+            const icon = document.getElementById('toggle-icon');
+            
+            if (sidebarOpen) {
+                sidebar.classList.remove('collapsed');
+                icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>';
+            } else {
+                sidebar.classList.add('collapsed');
+                icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>';
+            }
+        }
+
+        function switchView(view) {
+            currentView = view;
+            
+            // Update nav items
+            document.querySelectorAll('.nav-item').forEach((item, index) => {
+                item.classList.remove('active');
+                const views = ['users', 'overview', 'log', 'audit'];
+                if (views[index] === view) {
+                    item.classList.add('active');
+                }
+            });
+            
+            // Update header
+            const titles = {
+                users: { title: 'Users & Access', desc: 'Manage users and their system access' },
+                overview: { title: 'Access Overview', desc: 'View and manage all access grants' },
+                log: { title: 'Log Access Grant', desc: 'Record a new access grant' },
+                audit: { title: 'Audit Log', desc: 'Track all access changes' }
+            };
+            document.getElementById('page-title').textContent = titles[view].title;
+            document.getElementById('page-description').textContent = titles[view].desc;
+            
+            loadView(view);
+        }
+
+        async function loadView(view) {
+            const container = document.getElementById('view-container');
+            
+            if (view === 'users') {
+                container.innerHTML = await loadUsersView();
+            } else if (view === 'overview') {
+                container.innerHTML = await loadAccessOverviewView();
+                // Initialize overview data after HTML is rendered
+                setTimeout(async () => {
+                    // If a system is already selected, load its instances/tiers
+                    if (overviewFilters.systemId) {
+                        await handleOverviewSystemChange();
+                    } else {
+                        fetchOverviewGrants();
+                    }
+                }, 100);
+            } else if (view === 'log') {
+                container.innerHTML = await loadLogView();
+            } else if (view === 'audit') {
+                container.innerHTML = await loadAuditView();
+            }
+        }
+
+        let users = [];
+        let grants = [];
+        let auditLog = [];
+        let systems = []; // Store filtered systems globally for bulk upload
+        let expandedUsers = {};
+
+        async function loadUsersView() {
+            const container = document.getElementById('view-container');
+            container.innerHTML = '<div class="card"><p>Loading users...</p></div>';
+            
+            try {
+                const usersResp = await fetch(`${API_BASE}/api/v1/users?page=1&limit=100`);
+                const usersData = await usersResp.json();
+                users = usersData.data || usersData || [];
+
+                const grantsResp = await fetch(`${API_BASE}/api/v1/access-overview?page=1&limit=1000&status=active`);
+                const grantsData = await grantsResp.json();
+                grants = grantsData.data || [];
+
+                return renderUsersView();
+            } catch (error) {
+                console.error('Error loading users:', error);
+                return `<div class="card">Error loading users: ${error.message}</div>`;
+            }
+        }
+
+        function renderUsersView() {
+            let html = `
+                <div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <div class="search-box" style="flex: 1; margin-right: 16px;">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                            <input type="text" id="user-search" placeholder="Search by name or email..." oninput="filterUsers()">
+                        </div>
+                        ${currentUser?.role === 'owner' || currentUser?.role === 'admin' ? `
+                            <button class="btn btn-primary" onclick="showAddUserForm()">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                </svg>
+                                Add User
+                            </button>
+                        ` : ''}
+                    </div>
+                    <div id="users-list"></div>
+                </div>
+            `;
+            // Render immediately after HTML is set
+            setTimeout(() => {
+                renderUsersList();
+            }, 50);
+            return html;
+        }
+
+        function renderUsersList(searchQuery = '') {
+            const container = document.getElementById('users-list');
+            if (!container) {
+                console.error('users-list container not found');
+                return;
+            }
+
+            if (users.length === 0) {
+                container.innerHTML = '<div class="card"><p style="text-align: center; color: var(--muted-foreground); padding: 24px;">No users found. Users will appear here once they are created.</p></div>';
+                return;
+            }
+
+            const filtered = users.filter(u => {
+                const query = searchQuery.toLowerCase();
+                return u.name?.toLowerCase().includes(query) || u.email?.toLowerCase().includes(query);
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = '<div class="card"><p style="text-align: center; color: var(--muted-foreground); padding: 24px;">No users match your search.</p></div>';
+                return;
+            }
+
+            container.innerHTML = filtered.map(user => {
+                const userGrants = grants.filter(g => (g.user?.id === user.id || g.userId === user.id) && g.status === 'active');
+                const isExpanded = expandedUsers[user.id];
+
+                return `
+                    <div class="user-card">
+                        <div class="user-header" onclick="toggleUser('${user.id}')">
+                            <div class="user-info">
+                                <h3>${user.name}</h3>
+                                <p>${user.email}</p>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 16px;">
+                                <span class="grant-badge">${userGrants.length} grants</span>
+                                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${isExpanded ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7'}"></path>
+                                </svg>
+                            </div>
+                        </div>
+                        ${isExpanded ? `
+                            <div class="user-details">
+                                ${userGrants.length > 0 ? `
+                                    <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">Access Grants</h4>
+                                    <div>
+                                        ${userGrants.map(grant => `
+                                            <div class="grant-item">
+                                                <div class="grant-info">
+                                                    <p>${grant.systemInstance?.system?.name || 'System'}</p>
+                                                    <span>${grant.systemInstance?.name || 'Instance'} • ${grant.accessTier?.name || 'Tier'}</span>
+                                                </div>
+                                                <div style="display: flex; gap: 8px; align-items: center;">
+                                                    <button class="btn btn-outline" onclick="editGrant('${grant.id}', '${user.id}')" style="padding: 6px 12px; font-size: 12px;">
+                                                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                                        </svg>
+                                                        Edit
+                                                    </button>
+                                                    <button class="btn btn-destructive" onclick="deleteGrant('${grant.id}')" style="padding: 6px 12px; font-size: 12px;">
+                                                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                                        </svg>
+                                                        Delete
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                ` : '<p style="color: var(--muted-foreground); font-size: 14px;">No access grants</p>'}
+                                <div style="display: flex; gap: 12px; margin-top: 16px;">
+                                    <button class="btn btn-outline" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;" onclick="showAddGrantForm('${user.id}')">
+                                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                        </svg>
+                                        Add Access Grant
+                                    </button>
+                                    <button class="btn btn-destructive" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;" onclick="deleteUser('${user.id}', '${user.name}')">
+                                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                        </svg>
+                                        Delete User
+                                    </button>
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function toggleUser(userId) {
+            expandedUsers[userId] = !expandedUsers[userId];
+            renderUsersList(document.getElementById('user-search')?.value || '');
+        }
+
+        function filterUsers() {
+            const query = document.getElementById('user-search')?.value || '';
+            renderUsersList(query);
+        }
+
+        let bulkUploadMode = false;
+        let bulkUploadRows = [];
+        let csvUploadMode = false; // false = grid editor, true = CSV upload
+
+        async function loadLogView() {
+            try {
+                const token = localStorage.getItem('authToken');
+                
+                // Load users - deduplicate by ID
+                const usersResp = await fetch(`${API_BASE}/api/v1/users?page=1&limit=100`);
+                const usersData = await usersResp.json();
+                const allUsers = usersData.data || usersData || [];
+                // Deduplicate users by ID
+                const userMap = new Map();
+                allUsers.forEach(u => {
+                    if (!userMap.has(u.id)) {
+                        userMap.set(u.id, u);
+                    }
+                });
+                users = Array.from(userMap.values());
+
+                // Load systems - filter out test systems
+                const systemsResp = await fetch(`${API_BASE}/api/v1/systems`);
+                const allSystems = await systemsResp.json();
+                // Filter out test systems (those with "Test" in name or matching test patterns)
+                systems = Array.isArray(allSystems) 
+                    ? allSystems.filter(s => {
+                        const name = s.name?.toLowerCase() || '';
+                        return !name.includes('test') && 
+                               !name.includes('controller test') &&
+                               !name.match(/\d{13}/); // Filter out systems with timestamps
+                    })
+                    : [];
+
+                let html = `
+                    <div>
+                        <div class="card">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                                <div>
+                                    <h2 style="font-size: 20px; font-weight: 600; margin-bottom: 8px;">Log Access Grant</h2>
+                                    <p style="font-size: 14px; color: var(--muted-foreground);">
+                                        Record access grants quickly and easily.
+                                    </p>
+                                </div>
+                                <div style="display: flex; gap: 8px; background: var(--secondary); padding: 4px; border-radius: 6px;">
+                                    <button type="button" class="btn ${!bulkUploadMode ? 'btn-primary' : 'btn-outline'}" onclick="setBulkUploadMode(false)" style="padding: 6px 12px; font-size: 12px;">
+                                        Single Grant
+                                    </button>
+                                    <button type="button" class="btn ${bulkUploadMode ? 'btn-primary' : 'btn-outline'}" onclick="setBulkUploadMode(true)" style="padding: 6px 12px; font-size: 12px;">
+                                        Bulk Upload
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            ${!bulkUploadMode ? `
+                            <form id="log-form" onsubmit="handleLogAccess(event)">
+                                <div class="form-group">
+                                    <label>User <span style="color: var(--destructive);">*</span></label>
+                                    <select id="log-user" required>
+                                        <option value="">Select a user</option>
+                                        ${users.map(u => `<option value="${u.id}">${u.name} (${u.email})</option>`).join('')}
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>System <span style="color: var(--destructive);">*</span></label>
+                                    <select id="log-system" required onchange="loadSystemData()">
+                                        <option value="">Select a system</option>
+                                        ${systems.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Instance <span style="color: var(--destructive);">*</span></label>
+                                    <select id="log-instance" required>
+                                        <option value="">Select an instance</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Access Tier <span style="color: var(--destructive);">*</span></label>
+                                    <select id="log-tier" required>
+                                        <option value="">Select an access tier</option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                                    Log Access Grant
+                                </button>
+                            </form>
+                            <div id="log-success" style="display: none;" class="success-message">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">Access grant logged successfully</h3>
+                                <p style="color: var(--muted-foreground);">The access grant has been recorded.</p>
+                            </div>
+                            ` : `
+                            <div id="bulk-upload-form">
+                                <div style="display: flex; gap: 8px; background: var(--secondary); padding: 4px; border-radius: 6px; margin-bottom: 20px;">
+                                    <button type="button" class="btn ${!csvUploadMode ? 'btn-primary' : 'btn-outline'}" onclick="setCsvUploadMode(false)" style="padding: 6px 12px; font-size: 12px;">
+                                        Grid Editor
+                                    </button>
+                                    <button type="button" class="btn ${csvUploadMode ? 'btn-primary' : 'btn-outline'}" onclick="setCsvUploadMode(true)" style="padding: 6px 12px; font-size: 12px;">
+                                        CSV Upload
+                                    </button>
+                                </div>
+                                
+                                ${!csvUploadMode ? `
+                                <div>
+                                    <div style="margin-bottom: 16px;">
+                                        <button type="button" class="btn btn-outline" onclick="addBulkUploadRow()" style="margin-bottom: 16px;">
+                                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                            </svg>
+                                            Add Row
+                                        </button>
+                                        <div id="bulk-rows-container">
+                                            ${bulkUploadRows.length === 0 ? '<p style="color: var(--muted-foreground); font-size: 14px; text-align: center; padding: 24px;">Click "Add Row" to start adding grants</p>' : ''}
+                                        </div>
+                                    </div>
+                                    <button type="button" class="btn btn-primary" onclick="handleBulkUpload()" style="width: 100%;" ${bulkUploadRows.length === 0 ? 'disabled' : ''}>
+                                        Upload All Grants
+                                    </button>
+                                </div>
+                                ` : `
+                                <div>
+                                    <div style="margin-bottom: 16px;">
+                                        <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 16px;">
+                                            <button type="button" class="btn btn-outline" onclick="downloadCsvTemplate()">
+                                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                                </svg>
+                                                Download Template
+                                            </button>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>CSV File <span style="color: var(--destructive);">*</span></label>
+                                            <input type="file" id="csv-file-input" accept=".csv" onchange="handleCsvFileSelect(event)" style="padding: 8px; border: 1px solid var(--border); border-radius: 6px; width: 100%;">
+                                            <p style="font-size: 12px; color: var(--muted-foreground); margin-top: 8px;">
+                                                Upload a CSV file with columns: userEmail, systemName, instanceName, tierName, status (optional), grantedAt (optional)
+                                            </p>
+                                        </div>
+                                        <div id="csv-preview" style="display: none; margin-top: 16px;">
+                                            <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 8px;">Preview (first 5 rows):</h4>
+                                            <div id="csv-preview-content" style="background: var(--input); padding: 12px; border-radius: 6px; font-size: 12px; font-family: monospace; max-height: 200px; overflow-y: auto;"></div>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="btn btn-primary" onclick="handleCsvUpload()" style="width: 100%;" id="csv-upload-btn" disabled>
+                                        Upload CSV File
+                                    </button>
+                                </div>
+                                `}
+                                <div id="bulk-upload-results" style="display: none; margin-top: 24px;"></div>
+                            </div>
+                            `}
+                        </div>
+                    </div>
+                `;
+                
+                // After HTML is rendered, initialize bulk upload rows if in bulk mode
+                if (bulkUploadMode) {
+                    setTimeout(() => {
+                        renderBulkUploadRows();
+                        // Auto-add first row if empty
+                        if (bulkUploadRows.length === 0) {
+                            addBulkUploadRow();
+                        }
+                    }, 100);
+                }
+                
+                setTimeout(() => {
+                    // Initialize system data loading
+                    const systemSelect = document.getElementById('log-system');
+                    if (systemSelect && systemSelect.value) {
+                        loadSystemData();
+                    }
+                }, 100);
+                
+                return html;
+            } catch (error) {
+                return `<div class="card">Error loading form: ${error.message}</div>`;
+            }
+        }
+
+        async function loadSystemData() {
+            const systemId = document.getElementById('log-system').value;
+            if (!systemId) {
+                document.getElementById('log-instance').innerHTML = '<option value="">Select an instance</option>';
+                document.getElementById('log-tier').innerHTML = '<option value="">Select an access tier</option>';
+                return;
+            }
+
+            try {
+                const [instancesResp, tiersResp] = await Promise.all([
+                    fetch(`${API_BASE}/api/v1/systems/${systemId}/instances`),
+                    fetch(`${API_BASE}/api/v1/systems/${systemId}/access-tiers`)
+                ]);
+
+                const instances = await instancesResp.json();
+                const tiers = await tiersResp.json();
+
+                document.getElementById('log-instance').innerHTML = 
+                    '<option value="">Select an instance</option>' +
+                    instances.map(i => `<option value="${i.id}">${i.name}</option>`).join('');
+
+                document.getElementById('log-tier').innerHTML = 
+                    '<option value="">Select an access tier</option>' +
+                    tiers.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+            } catch (error) {
+                console.error('Error loading system data:', error);
+            }
+        }
+
+        async function deleteGrant(grantId) {
+            if (!confirm('Are you sure you want to remove this access grant?')) return;
+
+            try {
+                const token = localStorage.getItem('authToken');
+                
+                // Get grant details BEFORE deletion
+                const grant = grants.find(g => g.id === grantId);
+                const systemName = grant?.systemInstance?.system?.name || 'System';
+                const instanceName = grant?.systemInstance?.name || 'Instance';
+                const tierName = grant?.accessTier?.name || 'Tier';
+                const userName = grant?.user?.name || 'User';
+                
+                const response = await fetch(`${API_BASE}/api/v1/access-grants/${grantId}/status`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ status: 'removed' })
+                });
+
+                if (response.ok) {
+                    addAuditEntry('remove', userName, systemName, instanceName, tierName, 
+                        `Removed access: ${systemName} (${instanceName}) - ${tierName} from ${userName}`);
+                    
+                    // Reload grants and refresh view
+                    const grantsResp = await fetch(`${API_BASE}/api/v1/access-overview?page=1&limit=1000&status=active`);
+                    const grantsData = await grantsResp.json();
+                    grants = grantsData.data || [];
+                    
+                    // Refresh the users view
+                    loadView('users');
+                } else {
+                    const data = await response.json();
+                    alert('Error: ' + (data.message || 'Failed to remove grant'));
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        async function loadAuditView() {
+            return `
+                <div>
+                    <h2 style="font-size: 20px; font-weight: 600; margin-bottom: 8px;">Audit Log</h2>
+                    <p style="font-size: 14px; color: var(--muted-foreground); margin-bottom: 24px;">
+                        Track all access grant changes in your system.
+                    </p>
+                    <div id="audit-list">
+                        ${auditLog.length === 0 ? '<p style="text-align: center; padding: 48px; color: var(--muted-foreground);">No audit log entries yet.</p>' : auditLog.map(entry => `
+                            <div class="audit-entry ${entry.action}">
+                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                                    <span class="audit-badge ${entry.action}">${entry.action.toUpperCase()}</span>
+                                    <span style="font-weight: 600; color: var(--foreground);">${entry.actor}</span>
+                                </div>
+                                <p style="font-weight: 500; margin-bottom: 12px; color: var(--foreground);">${entry.details}</p>
+                                <div style="font-size: 13px; color: var(--muted-foreground); line-height: 1.6;">
+                                    <p><strong style="color: var(--foreground);">User:</strong> ${entry.targetUser}</p>
+                                    ${entry.targetSystem ? `<p><strong style="color: var(--foreground);">System:</strong> ${entry.targetSystem}${entry.targetInstance ? ` • ${entry.targetInstance}` : ''}${entry.targetTier ? ` • ${entry.targetTier}` : ''}</p>` : ''}
+                                    <p><strong style="color: var(--foreground);">Time:</strong> ${new Date(entry.timestamp).toLocaleString()}</p>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        async function handleLogAccess(event) {
+            event.preventDefault();
+            const token = localStorage.getItem('authToken');
+            
+            const userId = document.getElementById('log-user').value;
+            const systemInstanceId = document.getElementById('log-instance').value;
+            const accessTierId = document.getElementById('log-tier').value;
+
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/access-grants`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        userId,
+                        systemInstanceId,
+                        accessTierId
+                    })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    document.getElementById('log-form').style.display = 'none';
+                    document.getElementById('log-success').style.display = 'block';
+                    
+                    // Add to audit log with full details
+                    const user = users.find(u => u.id === userId);
+                    const systemSelect = document.getElementById('log-system');
+                    const instanceSelect = document.getElementById('log-instance');
+                    const tierSelect = document.getElementById('log-tier');
+                    const systemName = systemSelect.selectedOptions[0]?.text || 'System';
+                    const instanceName = instanceSelect.selectedOptions[0]?.text || 'Instance';
+                    const tierName = tierSelect.selectedOptions[0]?.text || 'Tier';
+                    
+                    addAuditEntry('add', user?.name || 'User', systemName, instanceName, tierName, 
+                        `Added access: ${systemName} (${instanceName}) - ${tierName}`);
+                    
+                    setTimeout(() => {
+                        document.getElementById('log-form').reset();
+                        document.getElementById('log-form').style.display = 'block';
+                        document.getElementById('log-success').style.display = 'none';
+                        loadView('log');
+                    }, 2000);
+                } else {
+                    alert('Error: ' + (data.message || 'Failed to log access'));
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        function addAuditEntry(action, targetUser, targetSystem, targetInstance, targetTier, details) {
+            auditLog.unshift({
+                id: Date.now().toString(),
+                timestamp: new Date(),
+                actor: currentUser?.name || currentUser?.email || 'Unknown',
+                action,
+                targetUser,
+                targetSystem,
+                targetInstance,
+                targetTier,
+                details
+            });
+        }
+
+        async function showAddGrantForm(userId) {
+            const user = users.find(u => u.id === userId);
+            if (!user) return;
+
+            // Create modal overlay
+            const modal = document.createElement('div');
+            modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center;';
+            modal.innerHTML = `
+                <div style="background: var(--card); border-radius: 8px; padding: 24px; width: 90%; max-width: 500px; max-height: 90vh; overflow-y: auto;">
+                    <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">Add Access Grant for ${user.name}</h3>
+                    <form id="add-grant-form" onsubmit="handleAddGrant(event, '${userId}')">
+                        <div class="form-group">
+                            <label>System <span style="color: var(--destructive);">*</span></label>
+                            <select id="grant-system" required onchange="loadGrantSystemData()">
+                                <option value="">Select a system</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Instance <span style="color: var(--destructive);">*</span></label>
+                            <select id="grant-instance" required>
+                                <option value="">Select an instance</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Access Tier <span style="color: var(--destructive);">*</span></label>
+                            <select id="grant-tier" required>
+                                <option value="">Select an access tier</option>
+                            </select>
+                        </div>
+                        <div style="display: flex; gap: 12px; margin-top: 24px;">
+                            <button type="button" class="btn btn-outline" style="flex: 1;" onclick="closeAddGrantModal()">Cancel</button>
+                            <button type="submit" class="btn btn-primary" style="flex: 1;">Add Grant</button>
+                        </div>
+                    </form>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            modal.id = 'add-grant-modal';
+
+            // Load systems - filter out test systems
+            try {
+                const systemsResp = await fetch(`${API_BASE}/api/v1/systems`);
+                const allSystems = await systemsResp.json();
+                const filteredSystems = Array.isArray(allSystems) 
+                    ? allSystems.filter(s => {
+                        const name = s.name?.toLowerCase() || '';
+                        return !name.includes('test') && 
+                               !name.includes('controller test') &&
+                               !name.match(/\d{13}/); // Filter out systems with timestamps
+                    })
+                    : [];
+                const systemSelect = document.getElementById('grant-system');
+                if (systemSelect) {
+                    systemSelect.innerHTML = '<option value="">Select a system</option>' + 
+                        filteredSystems.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+                }
+            } catch (error) {
+                console.error('Error loading systems:', error);
+            }
+        }
+
+        async function loadGrantSystemData() {
+            const systemId = document.getElementById('grant-system').value;
+            if (!systemId) {
+                document.getElementById('grant-instance').innerHTML = '<option value="">Select an instance</option>';
+                document.getElementById('grant-tier').innerHTML = '<option value="">Select an access tier</option>';
+                return;
+            }
+
+            try {
+                const [instancesResp, tiersResp] = await Promise.all([
+                    fetch(`${API_BASE}/api/v1/systems/${systemId}/instances`),
+                    fetch(`${API_BASE}/api/v1/systems/${systemId}/access-tiers`)
+                ]);
+
+                const instances = await instancesResp.json();
+                const tiers = await tiersResp.json();
+
+                document.getElementById('grant-instance').innerHTML = 
+                    '<option value="">Select an instance</option>' +
+                    instances.map(i => `<option value="${i.id}">${i.name}</option>`).join('');
+
+                document.getElementById('grant-tier').innerHTML = 
+                    '<option value="">Select an access tier</option>' +
+                    tiers.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+            } catch (error) {
+                console.error('Error loading system data:', error);
+            }
+        }
+
+        async function handleAddGrant(event, userId) {
+            event.preventDefault();
+            const token = localStorage.getItem('authToken');
+            
+            // Get values BEFORE closing modal
+            const systemSelect = document.getElementById('grant-system');
+            const instanceSelect = document.getElementById('grant-instance');
+            const tierSelect = document.getElementById('grant-tier');
+            
+            const systemInstanceId = instanceSelect?.value;
+            const accessTierId = tierSelect?.value;
+            const systemName = systemSelect?.selectedOptions[0]?.text || 'System';
+            const instanceName = instanceSelect?.selectedOptions[0]?.text || 'Instance';
+            const tierName = tierSelect?.selectedOptions[0]?.text || 'Tier';
+
+            if (!systemInstanceId || !accessTierId) {
+                alert('Please select all required fields');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/access-grants`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        userId,
+                        systemInstanceId,
+                        accessTierId
+                    })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    // Add to audit log BEFORE closing modal
+                    const user = users.find(u => u.id === userId);
+                    addAuditEntry('add', user?.name || 'User', systemName, instanceName, tierName, 
+                        `Added access: ${systemName} (${instanceName}) - ${tierName}`);
+                    
+                    closeAddGrantModal();
+                    
+                    // Reload users view
+                    loadView('users');
+                } else {
+                    alert('Error: ' + (data.message || 'Failed to add access grant'));
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        function closeAddGrantModal() {
+            const modal = document.getElementById('add-grant-modal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        async function editGrant(grantId, userId) {
+            const grant = grants.find(g => g.id === grantId);
+            if (!grant) {
+                alert('Grant not found');
+                return;
+            }
+
+            const user = users.find(u => u.id === userId);
+            if (!user) return;
+
+            // Create modal overlay
+            const modal = document.createElement('div');
+            modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center;';
+            modal.innerHTML = `
+                <div style="background: var(--card); border-radius: 8px; padding: 24px; width: 90%; max-width: 500px; max-height: 90vh; overflow-y: auto;">
+                    <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">Edit Access Grant for ${user.name}</h3>
+                    <form id="edit-grant-form" onsubmit="handleEditGrant(event, '${grantId}', '${userId}')">
+                        <div class="form-group">
+                            <label>System <span style="color: var(--destructive);">*</span></label>
+                            <select id="edit-grant-system" required onchange="loadEditGrantSystemData()">
+                                <option value="">Select a system</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Instance <span style="color: var(--destructive);">*</span></label>
+                            <select id="edit-grant-instance" required>
+                                <option value="">Select an instance</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Access Tier <span style="color: var(--destructive);">*</span></label>
+                            <select id="edit-grant-tier" required>
+                                <option value="">Select an access tier</option>
+                            </select>
+                        </div>
+                        <div style="display: flex; gap: 12px; margin-top: 24px;">
+                            <button type="button" class="btn btn-outline" style="flex: 1;" onclick="closeEditGrantModal()">Cancel</button>
+                            <button type="submit" class="btn btn-primary" style="flex: 1;">Update Grant</button>
+                        </div>
+                    </form>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            modal.id = 'edit-grant-modal';
+
+            // Load systems and set current values - filter out test systems
+            try {
+                const systemsResp = await fetch(`${API_BASE}/api/v1/systems`);
+                const allSystems = await systemsResp.json();
+                const filteredSystems = Array.isArray(allSystems) 
+                    ? allSystems.filter(s => {
+                        const name = s.name?.toLowerCase() || '';
+                        return !name.includes('test') && 
+                               !name.includes('controller test') &&
+                               !name.match(/\d{13}/); // Filter out systems with timestamps
+                    })
+                    : [];
+                const systemSelect = document.getElementById('edit-grant-system');
+                if (systemSelect) {
+                    systemSelect.innerHTML = '<option value="">Select a system</option>' + 
+                        filteredSystems.map(s => `<option value="${s.id}" ${s.id === grant.systemInstance?.systemId ? 'selected' : ''}>${s.name}</option>`).join('');
+                }
+                
+                // Load current system's instances and tiers
+                if (grant.systemInstance?.systemId) {
+                    await loadEditGrantSystemData();
+                    // Set current values
+                    setTimeout(() => {
+                        const instanceSelect = document.getElementById('edit-grant-instance');
+                        const tierSelect = document.getElementById('edit-grant-tier');
+                        if (instanceSelect && grant.systemInstanceId) {
+                            instanceSelect.value = grant.systemInstanceId;
+                        }
+                        if (tierSelect && grant.accessTierId) {
+                            tierSelect.value = grant.accessTierId;
+                        }
+                    }, 500);
+                }
+            } catch (error) {
+                console.error('Error loading systems:', error);
+            }
+        }
+
+        async function loadEditGrantSystemData() {
+            const systemId = document.getElementById('edit-grant-system').value;
+            if (!systemId) {
+                document.getElementById('edit-grant-instance').innerHTML = '<option value="">Select an instance</option>';
+                document.getElementById('edit-grant-tier').innerHTML = '<option value="">Select an access tier</option>';
+                return;
+            }
+
+            try {
+                const [instancesResp, tiersResp] = await Promise.all([
+                    fetch(`${API_BASE}/api/v1/systems/${systemId}/instances`),
+                    fetch(`${API_BASE}/api/v1/systems/${systemId}/access-tiers`)
+                ]);
+
+                const instances = await instancesResp.json();
+                const tiers = await tiersResp.json();
+
+                document.getElementById('edit-grant-instance').innerHTML = 
+                    '<option value="">Select an instance</option>' +
+                    instances.map(i => `<option value="${i.id}">${i.name}</option>`).join('');
+
+                document.getElementById('edit-grant-tier').innerHTML = 
+                    '<option value="">Select an access tier</option>' +
+                    tiers.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+            } catch (error) {
+                console.error('Error loading system data:', error);
+            }
+        }
+
+        async function handleEditGrant(event, grantId, userId) {
+            event.preventDefault();
+            const token = localStorage.getItem('authToken');
+            
+            // Get values BEFORE closing modal
+            const systemSelect = document.getElementById('edit-grant-system');
+            const instanceSelect = document.getElementById('edit-grant-instance');
+            const tierSelect = document.getElementById('edit-grant-tier');
+            
+            const systemInstanceId = instanceSelect?.value;
+            const accessTierId = tierSelect?.value;
+            const systemName = systemSelect?.selectedOptions[0]?.text || 'System';
+            const instanceName = instanceSelect?.selectedOptions[0]?.text || 'Instance';
+            const tierName = tierSelect?.selectedOptions[0]?.text || 'Tier';
+
+            if (!systemInstanceId || !accessTierId) {
+                alert('Please select all required fields');
+                return;
+            }
+
+            try {
+                // First remove the old grant
+                await fetch(`${API_BASE}/api/v1/access-grants/${grantId}/status`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ status: 'removed' })
+                });
+
+                // Then create a new one with updated values
+                const response = await fetch(`${API_BASE}/api/v1/access-grants`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        userId,
+                        systemInstanceId,
+                        accessTierId
+                    })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    // Add to audit log
+                    const user = users.find(u => u.id === userId);
+                    addAuditEntry('edit', user?.name || 'User', systemName, instanceName, tierName, 
+                        `Updated access: ${systemName} (${instanceName}) - ${tierName}`);
+                    
+                    closeEditGrantModal();
+                    
+                    // Reload users view
+                    loadView('users');
+                } else {
+                    alert('Error: ' + (data.message || 'Failed to update access grant'));
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        function closeEditGrantModal() {
+            const modal = document.getElementById('edit-grant-modal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        async function deleteUser(userId, userName) {
+            const confirmMessage = `Are you sure you want to delete ${userName}?\n\nThis will remove all their access grants. This action cannot be undone.`;
+            if (!confirm(confirmMessage)) return;
+
+            try {
+                const token = localStorage.getItem('authToken');
+                const response = await fetch(`${API_BASE}/api/v1/users/${userId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok || response.status === 204) {
+                    addAuditEntry('delete', userName, null, null, null, `Deleted user: ${userName} (removed all access)`);
+                    loadView('users');
+                } else {
+                    const data = await response.json();
+                    alert('Error: ' + (data.message || 'Failed to delete user'));
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        // Access Overview state
+        let overviewFilters = {
+            userSearch: '',
+            systemId: '',
+            systemInstanceId: '',
+            accessTierId: '',
+            status: '',
+            page: 1,
+            limit: 25,
+            sortBy: 'grantedAt',
+            sortOrder: 'DESC'
+        };
+        let overviewSystems = [];
+        let overviewInstances = [];
+        let overviewTiers = [];
+        let overviewGrants = [];
+        let overviewPagination = { total: 0, page: 1, limit: 25, totalPages: 1 };
+
+        async function loadAccessOverviewView() {
+            const container = document.getElementById('view-container');
+            container.innerHTML = '<div class="card"><p>Loading access overview...</p></div>';
+
+            try {
+                // Load systems for filter dropdown - only get systems that have grants
+                const grantsResp = await fetch(`${API_BASE}/api/v1/access-overview?limit=1000`);
+                const grantsData = await grantsResp.json();
+                const allGrants = grantsData.data || [];
+                
+                // Extract unique system IDs from grants
+                const systemIdsWithGrants = [...new Set(allGrants.map(g => g.systemInstance?.system?.id).filter(Boolean))];
+                
+                // Load all systems
+                const systemsResp = await fetch(`${API_BASE}/api/v1/systems`);
+                const allSystems = await systemsResp.json();
+                
+                // Filter to only systems that have grants (or show all if none have grants yet)
+                overviewSystems = systemIdsWithGrants.length > 0 
+                    ? allSystems.filter(s => systemIdsWithGrants.includes(s.id))
+                    : allSystems.slice(0, 10); // Limit to 10 if no grants yet
+
+                return renderAccessOverviewView();
+            } catch (error) {
+                return `<div class="card">Error loading access overview: ${error.message}</div>`;
+            }
+        }
+
+        function renderAccessOverviewView() {
+            return `
+                <div>
+                    <div class="card" style="margin-bottom: 24px;">
+                        <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">Filters</h3>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 16px;">
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label style="font-size: 12px; margin-bottom: 4px;">Search User</label>
+                                <input type="text" id="overview-user-search" placeholder="Name or email..." 
+                                    value="${overviewFilters.userSearch}" 
+                                    oninput="debounceFilter('userSearch', this.value)">
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label style="font-size: 12px; margin-bottom: 4px;">System</label>
+                                <select id="overview-system" onchange="handleOverviewSystemChange()" style="max-width: 200px;">
+                                    <option value="">All Systems</option>
+                                    ${overviewSystems.map(s => `<option value="${s.id}" ${s.id === overviewFilters.systemId ? 'selected' : ''}>${s.name}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label style="font-size: 12px; margin-bottom: 4px;">Instance</label>
+                                <select id="overview-instance" onchange="handleOverviewInstanceChange()">
+                                    <option value="">All Instances</option>
+                                    ${overviewInstances.map(i => `<option value="${i.id}" ${i.id === overviewFilters.systemInstanceId ? 'selected' : ''}>${i.name}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label style="font-size: 12px; margin-bottom: 4px;">Access Tier</label>
+                                <select id="overview-tier" onchange="updateOverviewFilter('accessTierId', this.value)">
+                                    <option value="">All Tiers</option>
+                                    ${overviewTiers.map(t => `<option value="${t.id}" ${t.id === overviewFilters.accessTierId ? 'selected' : ''}>${t.name}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label style="font-size: 12px; margin-bottom: 4px;">Status</label>
+                                <select id="overview-status" onchange="updateOverviewFilter('status', this.value)">
+                                    <option value="">All Status</option>
+                                    <option value="active" ${overviewFilters.status === 'active' ? 'selected' : ''}>Active</option>
+                                    <option value="removed" ${overviewFilters.status === 'removed' ? 'selected' : ''}>Removed</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <button class="btn btn-outline" onclick="clearOverviewFilters()" style="font-size: 12px;">
+                                Clear Filters
+                            </button>
+                            <div style="font-size: 12px; color: var(--muted-foreground);">
+                                Showing ${overviewPagination.total} grants
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                            <h3 style="font-size: 16px; font-weight: 600;">Access Grants</h3>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <label style="font-size: 12px;">Page size:</label>
+                                <select id="overview-page-size" onchange="updateOverviewFilter('limit', parseInt(this.value)); overviewFilters.page = 1; fetchOverviewGrants();" style="padding: 4px 8px; font-size: 12px;">
+                                    <option value="10" ${overviewFilters.limit === 10 ? 'selected' : ''}>10</option>
+                                    <option value="25" ${overviewFilters.limit === 25 ? 'selected' : ''}>25</option>
+                                    <option value="50" ${overviewFilters.limit === 50 ? 'selected' : ''}>50</option>
+                                    <option value="100" ${overviewFilters.limit === 100 ? 'selected' : ''}>100</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div id="overview-table-container">
+                            <div style="text-align: center; padding: 24px; color: var(--muted-foreground);">Loading grants...</div>
+                        </div>
+                        <div id="overview-pagination" style="margin-top: 16px;"></div>
+                    </div>
+                </div>
+            `;
+        }
+
+        let filterTimeout;
+        function debounceFilter(key, value) {
+            clearTimeout(filterTimeout);
+            filterTimeout = setTimeout(() => {
+                updateOverviewFilter(key, value);
+                overviewFilters.page = 1; // Reset to first page on filter change
+                fetchOverviewGrants();
+            }, 300);
+        }
+
+        function updateOverviewFilter(key, value) {
+            overviewFilters[key] = value;
+            if (key === 'systemId') {
+                overviewFilters.systemInstanceId = '';
+                overviewFilters.accessTierId = '';
+            }
+            if (key === 'systemInstanceId') {
+                overviewFilters.accessTierId = '';
+            }
+            // Trigger fetch when filter changes
+            overviewFilters.page = 1;
+            fetchOverviewGrants();
+        }
+
+        async function handleOverviewSystemChange() {
+            const systemId = document.getElementById('overview-system')?.value || '';
+            updateOverviewFilter('systemId', systemId);
+            
+            if (systemId) {
+                try {
+                    const [instancesResp, tiersResp] = await Promise.all([
+                        fetch(`${API_BASE}/api/v1/systems/${systemId}/instances`),
+                        fetch(`${API_BASE}/api/v1/systems/${systemId}/access-tiers`)
+                    ]);
+                    overviewInstances = await instancesResp.json();
+                    overviewTiers = await tiersResp.json();
+                    
+                    // Update dropdowns without full re-render
+                    const instanceSelect = document.getElementById('overview-instance');
+                    const tierSelect = document.getElementById('overview-tier');
+                    
+                    if (instanceSelect) {
+                        instanceSelect.innerHTML = '<option value="">All Instances</option>' +
+                            overviewInstances.map(i => `<option value="${i.id}">${i.name}</option>`).join('');
+                    }
+                    
+                    if (tierSelect) {
+                        tierSelect.innerHTML = '<option value="">All Tiers</option>' +
+                            overviewTiers.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+                    }
+                } catch (error) {
+                    console.error('Error loading system data:', error);
+                    overviewInstances = [];
+                    overviewTiers = [];
+                    
+                    const instanceSelect = document.getElementById('overview-instance');
+                    const tierSelect = document.getElementById('overview-tier');
+                    if (instanceSelect) instanceSelect.innerHTML = '<option value="">All Instances</option>';
+                    if (tierSelect) tierSelect.innerHTML = '<option value="">All Tiers</option>';
+                }
+            } else {
+                overviewInstances = [];
+                overviewTiers = [];
+                
+                const instanceSelect = document.getElementById('overview-instance');
+                const tierSelect = document.getElementById('overview-tier');
+                if (instanceSelect) instanceSelect.innerHTML = '<option value="">All Instances</option>';
+                if (tierSelect) tierSelect.innerHTML = '<option value="">All Tiers</option>';
+            }
+            
+            overviewFilters.page = 1;
+            await fetchOverviewGrants();
+        }
+
+        function handleOverviewInstanceChange() {
+            const instanceId = document.getElementById('overview-instance')?.value || '';
+            updateOverviewFilter('systemInstanceId', instanceId);
+        }
+
+        function clearOverviewFilters() {
+            overviewFilters = {
+                userSearch: '',
+                systemId: '',
+                systemInstanceId: '',
+                accessTierId: '',
+                status: '',
+                page: 1,
+                limit: 25,
+                sortBy: 'grantedAt',
+                sortOrder: 'DESC'
+            };
+            overviewInstances = [];
+            overviewTiers = [];
+            const container = document.getElementById('view-container');
+            container.innerHTML = renderAccessOverviewView();
+            setTimeout(() => {
+                fetchOverviewGrants();
+            }, 50);
+        }
+
+        async function fetchOverviewGrants() {
+            const container = document.getElementById('overview-table-container');
+            if (container) {
+                container.innerHTML = '<div style="text-align: center; padding: 24px; color: var(--muted-foreground);">Loading grants...</div>';
+            }
+
+            try {
+                const params = new URLSearchParams();
+                if (overviewFilters.userSearch) params.append('userSearch', overviewFilters.userSearch);
+                if (overviewFilters.systemId) params.append('systemId', overviewFilters.systemId);
+                if (overviewFilters.systemInstanceId) params.append('systemInstanceId', overviewFilters.systemInstanceId);
+                if (overviewFilters.accessTierId) params.append('accessTierId', overviewFilters.accessTierId);
+                if (overviewFilters.status) params.append('status', overviewFilters.status);
+                params.append('page', overviewFilters.page);
+                params.append('limit', overviewFilters.limit);
+                params.append('sortBy', overviewFilters.sortBy);
+                params.append('sortOrder', overviewFilters.sortOrder);
+
+                const response = await fetch(`${API_BASE}/api/v1/access-overview?${params}`);
+                const data = await response.json();
+                
+                overviewGrants = data.data || [];
+                overviewPagination = {
+                    total: data.total || 0,
+                    page: data.page || 1,
+                    limit: data.limit || 25,
+                    totalPages: data.totalPages || 1
+                };
+
+                renderOverviewTable();
+                renderOverviewPagination();
+            } catch (error) {
+                const container = document.getElementById('overview-table-container');
+                if (container) {
+                    container.innerHTML = `<div style="text-align: center; padding: 24px; color: var(--destructive);">Error loading grants: ${error.message}</div>`;
+                }
+            }
+        }
+
+        function renderOverviewTable() {
+            const container = document.getElementById('overview-table-container');
+            if (!container) return;
+
+            if (overviewGrants.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 48px; color: var(--muted-foreground);">No grants found matching your filters.</div>';
+                return;
+            }
+
+            const getSortIcon = (column) => {
+                if (overviewFilters.sortBy !== column) {
+                    return '<svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="opacity: 0.3;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path></svg>';
+                }
+                return overviewFilters.sortOrder === 'ASC' 
+                    ? '<svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg>'
+                    : '<svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>';
+            };
+
+            const handleSort = (column) => {
+                if (overviewFilters.sortBy === column) {
+                    overviewFilters.sortOrder = overviewFilters.sortOrder === 'ASC' ? 'DESC' : 'ASC';
+                } else {
+                    overviewFilters.sortBy = column;
+                    overviewFilters.sortOrder = 'DESC';
+                }
+                overviewFilters.page = 1;
+                fetchOverviewGrants();
+            };
+
+            container.innerHTML = `
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="border-bottom: 1px solid var(--border);">
+                                <th style="padding: 12px; text-align: left; font-size: 12px; font-weight: 600; color: var(--muted-foreground); cursor: pointer;" onclick="handleSort('userName')">
+                                    <div style="display: flex; align-items: center; gap: 4px;">
+                                        User ${getSortIcon('userName')}
+                                    </div>
+                                </th>
+                                <th style="padding: 12px; text-align: left; font-size: 12px; font-weight: 600; color: var(--muted-foreground); cursor: pointer;" onclick="handleSort('systemName')">
+                                    <div style="display: flex; align-items: center; gap: 4px;">
+                                        System ${getSortIcon('systemName')}
+                                    </div>
+                                </th>
+                                <th style="padding: 12px; text-align: left; font-size: 12px; font-weight: 600; color: var(--muted-foreground);">Instance</th>
+                                <th style="padding: 12px; text-align: left; font-size: 12px; font-weight: 600; color: var(--muted-foreground);">Tier</th>
+                                <th style="padding: 12px; text-align: left; font-size: 12px; font-weight: 600; color: var(--muted-foreground);">Status</th>
+                                <th style="padding: 12px; text-align: left; font-size: 12px; font-weight: 600; color: var(--muted-foreground); cursor: pointer;" onclick="handleSort('grantedAt')">
+                                    <div style="display: flex; align-items: center; gap: 4px;">
+                                        Granted ${getSortIcon('grantedAt')}
+                                    </div>
+                                </th>
+                                <th style="padding: 12px; text-align: left; font-size: 12px; font-weight: 600; color: var(--muted-foreground);">Granted By</th>
+                                <th style="padding: 12px; text-align: left; font-size: 12px; font-weight: 600; color: var(--muted-foreground);">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${overviewGrants.map(grant => `
+                                <tr style="border-bottom: 1px solid var(--border); ${grant.status === 'removed' ? 'opacity: 0.6;' : ''}">
+                                    <td style="padding: 12px;">
+                                        <div style="font-weight: 500; font-size: 14px;">${grant.user?.name || 'Unknown'}</div>
+                                        <div style="font-size: 12px; color: var(--muted-foreground);">${grant.user?.email || ''}</div>
+                                    </td>
+                                    <td style="padding: 12px; font-size: 14px;">${grant.systemInstance?.system?.name || 'Unknown'}</td>
+                                    <td style="padding: 12px; font-size: 14px;">${grant.systemInstance?.name || 'Unknown'}</td>
+                                    <td style="padding: 12px; font-size: 14px;">${grant.accessTier?.name || 'Unknown'}</td>
+                                    <td style="padding: 12px;">
+                                        <span style="display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; 
+                                            ${grant.status === 'active' ? 'background: rgba(34, 197, 94, 0.1); color: #22c55e;' : 'background: rgba(255, 69, 58, 0.1); color: #ff453a;'}">
+                                            ${grant.status === 'active' ? 'Active' : 'Removed'}
+                                        </span>
+                                    </td>
+                                    <td style="padding: 12px; font-size: 13px; color: var(--muted-foreground);">
+                                        ${grant.grantedAt ? new Date(grant.grantedAt).toLocaleDateString() : '-'}
+                                    </td>
+                                    <td style="padding: 12px; font-size: 13px; color: var(--muted-foreground);">
+                                        ${grant.grantedBy?.name || '-'}
+                                    </td>
+                                    <td style="padding: 12px;">
+                                        ${grant.status === 'active' ? `
+                                            <button class="btn btn-destructive" onclick="removeGrantFromOverview('${grant.id}')" style="padding: 4px 8px; font-size: 12px;">
+                                                Remove
+                                            </button>
+                                        ` : '-'}
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        function renderOverviewPagination() {
+            const container = document.getElementById('overview-pagination');
+            if (!container) return;
+
+            const { page, totalPages, limit, total } = overviewPagination;
+            const start = (page - 1) * limit + 1;
+            const end = Math.min(page * limit, total);
+
+            if (totalPages <= 1) {
+                container.innerHTML = `<div style="text-align: center; font-size: 12px; color: var(--muted-foreground);">Showing ${start}-${end} of ${total} grants</div>`;
+                return;
+            }
+
+            container.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="font-size: 12px; color: var(--muted-foreground);">
+                        Showing ${start}-${end} of ${total} grants
+                    </div>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <button class="btn btn-outline" onclick="changeOverviewPage(${page - 1})" ${page === 1 ? 'disabled' : ''} style="padding: 6px 12px; font-size: 12px;">
+                            Previous
+                        </button>
+                        <div style="font-size: 12px; color: var(--foreground);">
+                            Page ${page} of ${totalPages}
+                        </div>
+                        <button class="btn btn-outline" onclick="changeOverviewPage(${page + 1})" ${page === totalPages ? 'disabled' : ''} style="padding: 6px 12px; font-size: 12px;">
+                            Next
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function changeOverviewPage(newPage) {
+            if (newPage < 1 || newPage > overviewPagination.totalPages) return;
+            overviewFilters.page = newPage;
+            fetchOverviewGrants();
+        }
+
+        async function removeGrantFromOverview(grantId) {
+            const grant = overviewGrants.find(g => g.id === grantId);
+            if (!grant) return;
+
+            const confirmMessage = `Are you sure you want to remove access for ${grant.user?.name || 'this user'}?\n\nSystem: ${grant.systemInstance?.system?.name || 'Unknown'}\nInstance: ${grant.systemInstance?.name || 'Unknown'}\nTier: ${grant.accessTier?.name || 'Unknown'}`;
+            if (!confirm(confirmMessage)) return;
+
+            try {
+                const token = localStorage.getItem('authToken');
+                const response = await fetch(`${API_BASE}/api/v1/access-grants/${grantId}/status`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ status: 'removed' })
+                });
+
+                if (response.ok) {
+                    const systemName = grant.systemInstance?.system?.name || 'System';
+                    const instanceName = grant.systemInstance?.name || 'Instance';
+                    const tierName = grant.accessTier?.name || 'Tier';
+                    const userName = grant.user?.name || 'User';
+                    
+                    addAuditEntry('remove', userName, systemName, instanceName, tierName, 
+                        `Removed access: ${systemName} (${instanceName}) - ${tierName} from ${userName}`);
+                    
+                    // Refresh overview
+                    await fetchOverviewGrants();
+                } else {
+                    const data = await response.json();
+                    alert('Error: ' + (data.message || 'Failed to remove grant'));
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        // Make functions available globally
+        window.debounceFilter = debounceFilter;
+        window.handleOverviewSystemChange = handleOverviewSystemChange;
+        window.handleOverviewSystemChange = handleOverviewSystemChange;
+        window.handleOverviewInstanceChange = handleOverviewInstanceChange;
+        window.updateOverviewFilter = updateOverviewFilter;
+        window.clearOverviewFilters = clearOverviewFilters;
+        window.changeOverviewPage = changeOverviewPage;
+        window.removeGrantFromOverview = removeGrantFromOverview;
+        window.handleSort = (column) => {
+            if (overviewFilters.sortBy === column) {
+                overviewFilters.sortOrder = overviewFilters.sortOrder === 'ASC' ? 'DESC' : 'ASC';
+            } else {
+                overviewFilters.sortBy = column;
+                overviewFilters.sortOrder = 'DESC';
+            }
+            overviewFilters.page = 1;
+            fetchOverviewGrants();
+        };
+
+
+        function setBulkUploadMode(mode) {
+            bulkUploadMode = mode;
+            if (mode && bulkUploadRows.length === 0) {
+                addBulkUploadRow();
+            }
+            loadView('log');
+        }
+
+        function addBulkUploadRow() {
+            const rowId = String(Date.now() + Math.random()); // Ensure string ID for DOM matching
+            bulkUploadRows.push({
+                id: rowId,
+                userId: '',
+                systemId: '',
+                systemInstanceId: '',
+                accessTierId: ''
+            });
+            renderBulkUploadRows();
+        }
+
+        function removeBulkUploadRow(rowId) {
+            bulkUploadRows = bulkUploadRows.filter(r => r.id !== rowId);
+            renderBulkUploadRows();
+        }
+
+        async function renderBulkUploadRows() {
+            const container = document.getElementById('bulk-rows-container');
+            if (!container) return;
+
+            if (bulkUploadRows.length === 0) {
+                container.innerHTML = '<p style="color: var(--muted-foreground); font-size: 14px; text-align: center; padding: 24px;">Click "Add Row" to start adding grants</p>';
+                const uploadBtn = document.querySelector('button[onclick="handleBulkUpload()"]');
+                if (uploadBtn) uploadBtn.disabled = true;
+                return;
+            }
+
+            // Ensure users and systems are loaded
+            if (!users || users.length === 0) {
+                try {
+                    const usersResp = await fetch(`${API_BASE}/api/v1/users?page=1&limit=100`);
+                    const usersData = await usersResp.json();
+                    const allUsers = usersData.data || usersData || [];
+                    // Deduplicate users by ID
+                    const userMap = new Map();
+                    allUsers.forEach(u => {
+                        if (!userMap.has(u.id)) {
+                            userMap.set(u.id, u);
+                        }
+                    });
+                    users = Array.from(userMap.values());
+                } catch (error) {
+                    console.error('Error loading users for bulk upload:', error);
+                }
+            }
+
+            if (!systems || systems.length === 0) {
+                try {
+                    const systemsResp = await fetch(`${API_BASE}/api/v1/systems`);
+                    const allSystems = await systemsResp.json();
+                    // Filter out test systems
+                    systems = Array.isArray(allSystems) 
+                        ? allSystems.filter(s => {
+                            const name = s.name?.toLowerCase() || '';
+                            return !name.includes('test') && 
+                                   !name.includes('controller test') &&
+                                   !name.match(/\d{13}/);
+                        })
+                        : [];
+                } catch (error) {
+                    console.error('Error loading systems for bulk upload:', error);
+                }
+            }
+
+            const uploadBtn = document.querySelector('button[onclick="handleBulkUpload()"]');
+            if (uploadBtn) uploadBtn.disabled = false;
+
+            container.innerHTML = bulkUploadRows.map((row, index) => `
+                <div class="bulk-row" style="border: 1px solid var(--border); border-radius: 6px; padding: 16px; margin-bottom: 12px; background: var(--card);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <span style="font-size: 12px; font-weight: 600; color: var(--muted-foreground);">Row ${index + 1}</span>
+                        <button type="button" class="btn btn-destructive" onclick="removeBulkUploadRow('${row.id}')" style="padding: 4px 8px; font-size: 11px;">
+                            Remove
+                        </button>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label style="font-size: 12px; margin-bottom: 4px;">User *</label>
+                            <select class="bulk-select" data-row-id="${row.id}" data-field="userId" required onchange="updateBulkRow('${row.id}', 'userId', this.value)">
+                                <option value="">Select user</option>
+                                ${(users || []).map(u => `<option value="${u.id}" ${u.id === row.userId ? 'selected' : ''}>${u.name} (${u.email})</option>`).join('')}
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label style="font-size: 12px; margin-bottom: 4px;">System *</label>
+                            <select class="bulk-select" data-row-id="${row.id}" data-field="systemId" required onchange="updateBulkRow('${row.id}', 'systemId', this.value); loadBulkSystemData('${row.id}', this.value)">
+                                <option value="">Select system</option>
+                                ${(systems || []).map(s => `<option value="${s.id}" ${s.id === row.systemId ? 'selected' : ''}>${s.name}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label style="font-size: 12px; margin-bottom: 4px;">Instance *</label>
+                            <select class="bulk-select" data-row-id="${row.id}" data-field="systemInstanceId" required onchange="updateBulkRow('${row.id}', 'systemInstanceId', this.value)">
+                                <option value="">Select instance</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label style="font-size: 12px; margin-bottom: 4px;">Access Tier *</label>
+                            <select class="bulk-select" data-row-id="${row.id}" data-field="accessTierId" required onchange="updateBulkRow('${row.id}', 'accessTierId', this.value)">
+                                <option value="">Select tier</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Load system data for rows that have systemId
+            bulkUploadRows.forEach(row => {
+                if (row.systemId) {
+                    loadBulkSystemData(row.id, row.systemId);
+                }
+            });
+        }
+
+        function updateBulkRow(rowId, field, value) {
+            const row = bulkUploadRows.find(r => r.id === rowId);
+            if (row) {
+                row[field] = value;
+                if (field === 'systemId') {
+                    row.systemInstanceId = '';
+                    row.accessTierId = '';
+                }
+                if (field === 'systemInstanceId') {
+                    row.accessTierId = '';
+                }
+            }
+        }
+
+        async function loadBulkSystemData(rowId, systemId) {
+            if (!systemId || !rowId) {
+                console.log('loadBulkSystemData: Missing systemId or rowId', { systemId, rowId });
+                return;
+            }
+
+            const row = bulkUploadRows.find(r => String(r.id) === String(rowId));
+            if (!row) {
+                console.log('loadBulkSystemData: Row not found', { rowId, availableIds: bulkUploadRows.map(r => r.id) });
+                return;
+            }
+
+            try {
+                const [instancesResp, tiersResp] = await Promise.all([
+                    fetch(`${API_BASE}/api/v1/systems/${systemId}/instances`),
+                    fetch(`${API_BASE}/api/v1/systems/${systemId}/access-tiers`)
+                ]);
+
+                if (!instancesResp.ok || !tiersResp.ok) {
+                    throw new Error('Failed to fetch system data');
+                }
+
+                const instances = await instancesResp.json();
+                const tiers = await tiersResp.json();
+
+                // Ensure we have arrays
+                const instancesArray = Array.isArray(instances) ? instances : [];
+                const tiersArray = Array.isArray(tiers) ? tiers : [];
+
+                // Update instance dropdown - use string comparison for rowId
+                const instanceSelect = document.querySelector(`select[data-row-id="${String(rowId)}"][data-field="systemInstanceId"]`);
+                if (instanceSelect) {
+                    instanceSelect.innerHTML = '<option value="">Select instance</option>' +
+                        instancesArray.map(i => `<option value="${i.id}" ${i.id === row.systemInstanceId ? 'selected' : ''}>${i.name}</option>`).join('');
+                    console.log('loadBulkSystemData: Updated instance dropdown', { rowId, count: instancesArray.length });
+                } else {
+                    console.error('loadBulkSystemData: Instance select not found', { rowId, selector: `select[data-row-id="${String(rowId)}"][data-field="systemInstanceId"]` });
+                }
+
+                // Update tier dropdown - use string comparison for rowId
+                const tierSelect = document.querySelector(`select[data-row-id="${String(rowId)}"][data-field="accessTierId"]`);
+                if (tierSelect) {
+                    tierSelect.innerHTML = '<option value="">Select tier</option>' +
+                        tiersArray.map(t => `<option value="${t.id}" ${t.id === row.accessTierId ? 'selected' : ''}>${t.name}</option>`).join('');
+                    console.log('loadBulkSystemData: Updated tier dropdown', { rowId, count: tiersArray.length });
+                } else {
+                    console.error('loadBulkSystemData: Tier select not found', { rowId, selector: `select[data-row-id="${String(rowId)}"][data-field="accessTierId"]` });
+                }
+            } catch (error) {
+                console.error('Error loading system data:', error);
+                alert(`Error loading system data: ${error.message}`);
+            }
+        }
+
+        async function handleBulkUpload() {
+            const resultsContainer = document.getElementById('bulk-upload-results');
+            const uploadBtn = document.querySelector('button[onclick="handleBulkUpload()"]');
+            
+            if (bulkUploadRows.length === 0) {
+                alert('Please add at least one grant row');
+                return;
+            }
+
+            // Validate all rows
+            const invalidRows = bulkUploadRows.map((r, index) => ({ row: index + 1, ...r }))
+                .filter(r => !r.userId || !r.systemId || !r.systemInstanceId || !r.accessTierId);
+            if (invalidRows.length > 0) {
+                const missingFields = invalidRows.map(r => {
+                    const missing = [];
+                    if (!r.userId) missing.push('User');
+                    if (!r.systemId) missing.push('System');
+                    if (!r.systemInstanceId) missing.push('Instance');
+                    if (!r.accessTierId) missing.push('Access Tier');
+                    return `Row ${r.row}: ${missing.join(', ')}`;
+                }).join('\n');
+                alert(`Please fill in all required fields:\n\n${missingFields}`);
+                return;
+            }
+
+            // Disable button
+            if (uploadBtn) {
+                uploadBtn.disabled = true;
+                uploadBtn.textContent = 'Uploading...';
+            }
+
+            try {
+                const token = localStorage.getItem('authToken');
+                const grants = bulkUploadRows.map(r => ({
+                    userId: r.userId,
+                    systemInstanceId: r.systemInstanceId,
+                    accessTierId: r.accessTierId
+                }));
+
+                const response = await fetch(`${API_BASE}/api/v1/access-grants/bulk`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ grants })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Show results
+                    resultsContainer.style.display = 'block';
+                    resultsContainer.innerHTML = `
+                        <div class="card" style="background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 20px;">
+                            <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">Upload Results</h3>
+                            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px;">
+                                <div style="text-align: center; padding: 12px; background: rgba(34, 197, 94, 0.1); border-radius: 6px;">
+                                    <div style="font-size: 24px; font-weight: 700; color: #22c55e;">${data.success}</div>
+                                    <div style="font-size: 12px; color: var(--muted-foreground);">Successful</div>
+                                </div>
+                                <div style="text-align: center; padding: 12px; background: rgba(255, 69, 58, 0.1); border-radius: 6px;">
+                                    <div style="font-size: 24px; font-weight: 700; color: #ff453a;">${data.failed}</div>
+                                    <div style="font-size: 12px; color: var(--muted-foreground);">Failed</div>
+                                </div>
+                                <div style="text-align: center; padding: 12px; background: rgba(255, 193, 7, 0.1); border-radius: 6px;">
+                                    <div style="font-size: 24px; font-weight: 700; color: #ffc107;">${data.skipped || 0}</div>
+                                    <div style="font-size: 12px; color: var(--muted-foreground);">Skipped</div>
+                                </div>
+                            </div>
+                            ${data.failed > 0 || data.skipped > 0 ? `
+                                <div style="max-height: 300px; overflow-y: auto; border: 1px solid var(--border); border-radius: 6px; padding: 12px; margin-top: 16px;">
+                                    <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">Details</h4>
+                                    ${data.results.map((result, index) => {
+                                        if (result.success) return '';
+                                        const errorMsg = result.skipped 
+                                            ? `<span style="color: #ffc107;">⚠️ Skipped (duplicate active grant)</span>`
+                                            : `<span style="color: #ff453a;">❌ ${result.error || 'Failed'}</span>`;
+                                        return `
+                                            <div style="padding: 8px; margin-bottom: 8px; background: var(--input); border-radius: 4px; font-size: 12px;">
+                                                <strong>Row ${result.row}:</strong> ${errorMsg}
+                                            </div>
+                                        `;
+                                    }).filter(Boolean).join('')}
+                                </div>
+                            ` : ''}
+                            ${data.success > 0 ? `
+                                <div style="margin-top: 16px; padding: 12px; background: rgba(34, 197, 94, 0.1); border-radius: 6px; border: 1px solid rgba(34, 197, 94, 0.3);">
+                                    <div style="font-size: 14px; color: #22c55e; font-weight: 600;">✅ ${data.success} grant(s) successfully created!</div>
+                                </div>
+                            ` : ''}
+                            <button class="btn btn-primary" onclick="resetBulkUpload()" style="width: 100%; margin-top: 16px;">
+                                Add More Grants
+                            </button>
+                        </div>
+                    `;
+
+                    // Add to audit log
+                    data.results.forEach(result => {
+                        if (result.success && result.grant) {
+                            const grant = result.grant;
+                            const user = users.find(u => u.id === grant.userId);
+                            addAuditEntry('add', user?.name || 'User', 
+                                grant.systemInstance?.system?.name || 'System',
+                                grant.systemInstance?.name || 'Instance',
+                                grant.accessTier?.name || 'Tier',
+                                `Bulk added: ${grant.systemInstance?.system?.name || 'System'} (${grant.systemInstance?.name || 'Instance'}) - ${grant.accessTier?.name || 'Tier'}`);
+                        }
+                    });
+
+                    // Clear rows after successful upload and update UI
+                    bulkUploadRows = [];
+                    renderBulkUploadRows();
+                } else {
+                    alert('Error: ' + (data.message || 'Failed to upload grants'));
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            } finally {
+                if (uploadBtn) {
+                    uploadBtn.disabled = false;
+                    uploadBtn.textContent = 'Upload All Grants';
+                }
+            }
+        }
+
+        function resetBulkUpload() {
+            bulkUploadRows = [];
+            document.getElementById('bulk-upload-results').style.display = 'none';
+            renderBulkUploadRows();
+        }
+
+        function setCsvUploadMode(mode) {
+            csvUploadMode = mode;
+            if (bulkUploadMode) {
+                loadView('log');
+            }
+        }
+
+        function downloadCsvTemplate() {
+            const link = document.createElement('a');
+            link.href = `${API_BASE}/api/v1/access-grants/bulk/csv/template`;
+            link.download = 'access-grants-template.csv';
+            link.click();
+        }
+
+        let selectedCsvFile = null;
+
+        function handleCsvFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) {
+                selectedCsvFile = null;
+                document.getElementById('csv-upload-btn').disabled = true;
+                document.getElementById('csv-preview').style.display = 'none';
+                return;
+            }
+
+            if (!file.name.endsWith('.csv')) {
+                alert('Please select a CSV file');
+                event.target.value = '';
+                return;
+            }
+
+            selectedCsvFile = file;
+            document.getElementById('csv-upload-btn').disabled = false;
+
+            // Preview CSV content (first 5 rows)
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const content = e.target.result;
+                const lines = content.split('\n').slice(0, 6); // Header + 5 rows
+                const previewContent = lines.map((line, index) => {
+                    if (index === 0) {
+                        return `<div style="font-weight: 600; color: var(--accent); margin-bottom: 4px;">${line}</div>`;
+                    }
+                    return `<div style="margin-bottom: 2px;">${line}</div>`;
+                }).join('');
+                document.getElementById('csv-preview-content').innerHTML = previewContent;
+                document.getElementById('csv-preview').style.display = 'block';
+            };
+            reader.readAsText(file);
+        }
+
+        async function handleCsvUpload() {
+            if (!selectedCsvFile) {
+                alert('Please select a CSV file');
+                return;
+            }
+
+            const uploadBtn = document.getElementById('csv-upload-btn');
+            const resultsContainer = document.getElementById('bulk-upload-results');
+            
+            uploadBtn.disabled = true;
+            uploadBtn.textContent = 'Uploading...';
+
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    alert('Please log in first');
+                    return;
+                }
+
+                const formData = new FormData();
+                formData.append('file', selectedCsvFile);
+
+                // Verify file is selected
+                if (!selectedCsvFile) {
+                    alert('Please select a CSV file first');
+                    return;
+                }
+
+                console.log('[Frontend CSV Upload] Starting upload...');
+                console.log('[Frontend CSV Upload] File:', selectedCsvFile.name, 'Size:', selectedCsvFile.size, 'Type:', selectedCsvFile.type);
+                console.log('[Frontend CSV Upload] Token:', token ? token.substring(0, 20) + '...' : 'MISSING');
+                console.log('[Frontend CSV Upload] API Base:', API_BASE);
+
+                let response;
+                try {
+                    // Create FormData and append file
+                    const formDataToSend = new FormData();
+                    formDataToSend.append('file', selectedCsvFile);
+                    console.log('[Frontend CSV Upload] FormData created, file appended');
+
+                    console.log('[Frontend CSV Upload] Sending fetch request to:', `${API_BASE}/api/v1/access-grants/bulk/csv`);
+                    response = await fetch(`${API_BASE}/api/v1/access-grants/bulk/csv`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                            // Don't set Content-Type - browser will set it automatically with boundary for FormData
+                        },
+                        body: formDataToSend
+                        // Don't set mode or credentials - use defaults
+                    });
+                    console.log('[Frontend CSV Upload] Response received:', response.status, response.statusText);
+                    console.log('[Frontend CSV Upload] Response headers:', Object.fromEntries(response.headers.entries()));
+                } catch (networkError) {
+                    console.error('[Frontend CSV Upload] Network error details:', networkError);
+                    console.error('[Frontend CSV Upload] Error type:', networkError.name);
+                    console.error('[Frontend CSV Upload] Error message:', networkError.message);
+                    console.error('[Frontend CSV Upload] Error stack:', networkError.stack);
+                    // Check if it's actually a network error or CORS error
+                    if (networkError.name === 'TypeError' && networkError.message.includes('Failed to fetch')) {
+                        throw new Error('Network error: Could not connect to server. Make sure the server is running on ' + API_BASE + '. If the server is running, check the browser console for CORS errors.');
+                    }
+                    throw networkError;
+                }
+
+                let data;
+                try {
+                    const text = await response.text();
+                    if (!text) {
+                        throw new Error('Empty response from server');
+                    }
+                    data = JSON.parse(text);
+                } catch (parseError) {
+                    console.error('Parse error:', parseError, 'Response status:', response.status);
+                    throw new Error('Server returned invalid response. Status: ' + response.status + '. Check console for details.');
+                }
+
+                if (response.ok) {
+                    // Show results (same format as grid upload)
+                    resultsContainer.style.display = 'block';
+                    resultsContainer.innerHTML = `
+                        <div class="card" style="background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 20px;">
+                            <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">Upload Results</h3>
+                            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px;">
+                                <div style="text-align: center; padding: 12px; background: rgba(34, 197, 94, 0.1); border-radius: 6px;">
+                                    <div style="font-size: 24px; font-weight: 700; color: #22c55e;">${data.success}</div>
+                                    <div style="font-size: 12px; color: var(--muted-foreground);">Successful</div>
+                                </div>
+                                <div style="text-align: center; padding: 12px; background: rgba(255, 69, 58, 0.1); border-radius: 6px;">
+                                    <div style="font-size: 24px; font-weight: 700; color: #ff453a;">${data.failed}</div>
+                                    <div style="font-size: 12px; color: var(--muted-foreground);">Failed</div>
+                                </div>
+                                <div style="text-align: center; padding: 12px; background: rgba(255, 193, 7, 0.1); border-radius: 6px;">
+                                    <div style="font-size: 24px; font-weight: 700; color: #ffc107;">${data.skipped || 0}</div>
+                                    <div style="font-size: 12px; color: var(--muted-foreground);">Skipped</div>
+                                </div>
+                            </div>
+                            ${data.failed > 0 || data.skipped > 0 ? `
+                                <div style="max-height: 300px; overflow-y: auto; border: 1px solid var(--border); border-radius: 6px; padding: 12px; margin-top: 16px;">
+                                    <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">Details</h4>
+                                    ${data.results.map((result) => {
+                                        if (result.success) return '';
+                                        const errorMsg = result.skipped 
+                                            ? `<span style="color: #ffc107;">⚠️ Skipped (duplicate active grant)</span>`
+                                            : `<span style="color: #ff453a;">❌ ${result.error || 'Failed'}</span>`;
+                                        return `
+                                            <div style="padding: 8px; margin-bottom: 8px; background: var(--input); border-radius: 4px; font-size: 12px;">
+                                                <strong>Row ${result.row}:</strong> ${errorMsg}
+                                            </div>
+                                        `;
+                                    }).filter(Boolean).join('')}
+                                </div>
+                            ` : ''}
+                            ${data.success > 0 ? `
+                                <div style="margin-top: 16px; padding: 12px; background: rgba(34, 197, 94, 0.1); border-radius: 6px; border: 1px solid rgba(34, 197, 94, 0.3);">
+                                    <div style="font-size: 14px; color: #22c55e; font-weight: 600;">✅ ${data.success} grant(s) successfully created!</div>
+                                </div>
+                            ` : ''}
+                            <button class="btn btn-primary" onclick="resetCsvUpload()" style="width: 100%; margin-top: 16px;">
+                                Upload Another File
+                            </button>
+                        </div>
+                    `;
+
+                    // Add to audit log
+                    data.results.forEach(result => {
+                        if (result.success && result.grant) {
+                            const grant = result.grant;
+                            // Grant should have relations loaded from backend
+                            const userName = grant.user?.name || users.find(u => u.id === grant.userId)?.name || 'User';
+                            const systemName = grant.systemInstance?.system?.name || 'System';
+                            const instanceName = grant.systemInstance?.name || 'Instance';
+                            const tierName = grant.accessTier?.name || 'Tier';
+                            addAuditEntry('add', userName, systemName, instanceName, tierName,
+                                `CSV bulk added: ${systemName} (${instanceName}) - ${tierName} for ${userName}`);
+                        }
+                    });
+
+                    // Reload grants to show in access overview
+                    try {
+                        const grantsResp = await fetch(`${API_BASE}/api/v1/access-overview?page=1&limit=1000&status=active`);
+                        const grantsData = await grantsResp.json();
+                        grants = grantsData.data || grantsData || [];
+                        
+                        // If currently viewing overview, refresh it
+                        if (currentView === 'overview') {
+                            loadView('overview');
+                        }
+                    } catch (error) {
+                        console.error('Error reloading grants:', error);
+                    }
+
+                    // Clear file input
+                    document.getElementById('csv-file-input').value = '';
+                    selectedCsvFile = null;
+                    document.getElementById('csv-preview').style.display = 'none';
+                } else {
+                    const errorMsg = data.message || data.error || 'Failed to upload CSV file';
+                    alert('Error: ' + errorMsg);
+                }
+            } catch (error) {
+                console.error('CSV upload error:', error);
+                alert('Error: ' + (error.message || 'Failed to upload CSV file. Please check the console for details.'));
+            } finally {
+                uploadBtn.disabled = false;
+                uploadBtn.textContent = 'Upload CSV File';
+            }
+        }
+
+        function resetCsvUpload() {
+            selectedCsvFile = null;
+            document.getElementById('csv-file-input').value = '';
+            document.getElementById('csv-preview').style.display = 'none';
+            document.getElementById('bulk-upload-results').style.display = 'none';
+            document.getElementById('csv-upload-btn').disabled = true;
+        }
+
+        // Make functions available globally
+        window.setBulkUploadMode = setBulkUploadMode;
+        window.setCsvUploadMode = setCsvUploadMode;
+        window.addBulkUploadRow = addBulkUploadRow;
+        window.removeBulkUploadRow = removeBulkUploadRow;
+        window.updateBulkRow = updateBulkRow;
+        window.loadBulkSystemData = loadBulkSystemData;
+        window.handleBulkUpload = handleBulkUpload;
+        window.resetBulkUpload = resetBulkUpload;
+        window.downloadCsvTemplate = downloadCsvTemplate;
+        window.handleCsvFileSelect = handleCsvFileSelect;
+        window.handleCsvUpload = handleCsvUpload;
+        window.resetCsvUpload = resetCsvUpload;
+
+        function logout() {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('currentUser');
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>

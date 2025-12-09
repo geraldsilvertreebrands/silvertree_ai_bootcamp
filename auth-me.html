@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auth Me - Current User</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f5f5;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #555;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1em;
+            font-family: 'Courier New', monospace;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1em;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+        button:hover {
+            background: #2980b9;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 4px;
+            display: none;
+        }
+        .result.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .result.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .user-info {
+            margin-top: 20px;
+        }
+        .user-info h2 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+        .user-info p {
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+        .user-info strong {
+            color: #555;
+            display: inline-block;
+            width: 100px;
+        }
+        .login-link {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        .login-link a {
+            color: #3498db;
+            text-decoration: none;
+        }
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Current User Info</h1>
+        <p class="subtitle">View your current authentication status</p>
+        
+        <div class="form-group">
+            <label for="token-input">Authentication Token:</label>
+            <input type="text" id="token-input" placeholder="Paste your token here or login first">
+        </div>
+        
+        <button onclick="getUserInfo()">Get My Info</button>
+        
+        <div id="result" class="result"></div>
+        
+        <div id="user-info" class="user-info" style="display: none;">
+            <h2>Your Information:</h2>
+            <p><strong>Email:</strong> <span id="user-email">-</span></p>
+            <p><strong>Name:</strong> <span id="user-name">-</span></p>
+            <p><strong>Role:</strong> <span id="user-role">-</span></p>
+        </div>
+        
+        <div class="login-link">
+            <a href="test-api.html">← Back to API Tester</a>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000';
+
+        // Load token from localStorage if available
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedToken = localStorage.getItem('authToken');
+            if (savedToken) {
+                document.getElementById('token-input').value = savedToken;
+                getUserInfo();
+            }
+        });
+
+        async function getUserInfo() {
+            const tokenInput = document.getElementById('token-input');
+            const token = tokenInput.value.trim();
+            const resultDiv = document.getElementById('result');
+            const userInfoDiv = document.getElementById('user-info');
+
+            if (!token) {
+                resultDiv.className = 'result error';
+                resultDiv.style.display = 'block';
+                resultDiv.textContent = 'Error: Please provide a token';
+                userInfoDiv.style.display = 'none';
+                return;
+            }
+
+            resultDiv.className = 'result';
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = 'Loading...';
+
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/auth/me?token=${encodeURIComponent(token)}`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Success - show user info
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = '✓ Successfully authenticated!';
+                    
+                    document.getElementById('user-email').textContent = data.email;
+                    document.getElementById('user-name').textContent = data.name;
+                    document.getElementById('user-role').textContent = data.role || 'user';
+                    userInfoDiv.style.display = 'block';
+
+                    // Save token for next time
+                    localStorage.setItem('authToken', token);
+                } else {
+                    // Error
+                    resultDiv.className = 'result error';
+                    resultDiv.textContent = `Error: ${data.message || 'Authentication failed'}`;
+                    userInfoDiv.style.display = 'none';
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `Error: ${error.message}`;
+                userInfoDiv.style.display = 'none';
+            }
+        }
+
+        // Allow Enter key to submit
+        document.getElementById('token-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                getUserInfo();
+            }
+        });
+    </script>
+</body>
+</html>
+
+
+
+

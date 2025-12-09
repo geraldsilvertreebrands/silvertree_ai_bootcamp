@@ -1,0 +1,36 @@
+# TDD Rules (practical for this app)
+
+## Workflow
+1) Write a failing test that encodes the acceptance criteria.
+2) Run it to see the expected failure.
+3) Write the minimal code to go green.
+4) Re-run tests; keep them green while refactoring.
+5) Run tests after every code change (don’t ask the user to run them).
+
+## What to cover here
+- Access grants (single and bulk), CSV parsing, duplicate prevention, authorization, audit visibility.
+- Happy path + edge cases: invalid/missing columns, bad system/instance/tier, duplicate grants, file size/row limits, empty files.
+
+## Commands to use
+```bash
+npm test                               # all tests
+npm run test:integration               # integration focus
+npm test -- tests/integration/csv-bulk-upload.integration.spec.ts
+```
+
+## Quality bar
+- Clear Arrange-Act-Assert, descriptive names.
+- Tests independent and repeatable (seed/cleanup appropriately).
+- Prefer service-level and integration tests for bulk upload and auth flows.
+- Don’t skip tests to “make it work”; keep coverage meaningful on services.
+- Don’t mutate seed data just to satisfy a test; craft per-test fixtures/factories instead.
+
+## When tests fail
+1) Read the error carefully.  
+2) Check expectations and test data/seed setup.  
+3) Fix the cause, re-run. If stuck after a few attempts, document the blocker.  
+
+## Definition of done
+- All relevant tests passing for the change.
+- New behavior covered by tests (especially bulk CSV paths).
+- Seed/data dependencies explicit in the test setup.

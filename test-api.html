@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Access Management API Tester</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .endpoint-group {
+            margin-bottom: 40px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 20px;
+        }
+        .endpoint-group h2 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        .endpoint {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 4px;
+            border-left: 4px solid #3498db;
+        }
+        .method {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-weight: bold;
+            font-size: 0.85em;
+            margin-right: 10px;
+        }
+        .method.get { background: #61affe; color: white; }
+        .method.post { background: #49cc90; color: white; }
+        .method.patch { background: #fca130; color: white; }
+        .endpoint-url {
+            font-family: 'Courier New', monospace;
+            color: #333;
+            font-size: 0.95em;
+        }
+        .test-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+        .test-btn:hover {
+            background: #2980b9;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f5f5f5;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .result.success {
+            border-left: 4px solid #27ae60;
+        }
+        .result.error {
+            border-left: 4px solid #e74c3c;
+        }
+        .form-group {
+            margin-top: 10px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #555;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        .form-group input[type="text"] {
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <div>
+        <h1>🔐 Access Management API Tester</h1>
+        <p class="subtitle">Test all API endpoints for the Silvertreebrands Access Management System</p>
+            </div>
+            <a href="dashboard.html" style="padding: 8px 16px; background: #667eea; color: white; text-decoration: none; border-radius: 4px;">← Back to Dashboard</a>
+        </div>
+        
+        <!-- Login Status Bar -->
+        <div id="login-status-bar" style="margin-bottom: 20px; padding: 15px; background: #e8f4f8; border-radius: 6px; border-left: 4px solid #3498db; display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <strong>Logged in as:</strong> <span id="logged-in-email">-</span> 
+                    (<span id="logged-in-role">-</span>)
+                </div>
+                <button onclick="logout()" style="padding: 6px 12px; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer;">Logout</button>
+            </div>
+        </div>
+        
+        <!-- 1. Identity Module (Users) -->
+        <div class="endpoint-group">
+            <h2>👤 Identity Module (Users)</h2>
+            
+            <div class="endpoint">
+                <span class="method get">GET</span>
+                <span class="endpoint-url">/api/v1/users</span>
+                <button class="test-btn" onclick="testGetUsers()">Test</button>
+                <div id="result-users-list" class="result" style="display:none;"></div>
+            </div>
+            
+            <div class="endpoint">
+                <span class="method post">POST</span>
+                <span class="endpoint-url">/api/v1/users</span>
+                <div class="form-group">
+                    <label>Email:</label>
+                    <input type="text" id="user-email" placeholder="user@example.com" value="test@example.com">
+                </div>
+                <div class="form-group">
+                    <label>Name:</label>
+                    <input type="text" id="user-name" placeholder="John Doe" value="Test User">
+                </div>
+                <button class="test-btn" onclick="createUser()">Create User</button>
+                <div id="result-create-user" class="result" style="display:none;"></div>
+            </div>
+        </div>
+        
+        <!-- Systems Module -->
+        <div class="endpoint-group">
+            <h2>🖥️ Systems Module</h2>
+            
+            <div class="endpoint">
+                <span class="method get">GET</span>
+                <span class="endpoint-url">/api/v1/systems</span>
+                <button class="test-btn" onclick="testGetSystems()">Get All Systems</button>
+                <div id="result-systems-list" class="result" style="display:none;"></div>
+            </div>
+            
+            <div class="endpoint">
+                <span class="method post">POST</span>
+                <span class="endpoint-url">/api/v1/systems</span>
+                <div class="form-group">
+                    <label>System Name:</label>
+                    <input type="text" id="system-name" placeholder="Acumatica" value="Test System">
+                </div>
+                <div class="form-group">
+                    <label>Description (optional):</label>
+                    <input type="text" id="system-desc" placeholder="ERP System">
+                </div>
+                <button class="test-btn" onclick="createSystem()">Create System</button>
+                <div id="result-create-system" class="result" style="display:none;"></div>
+            </div>
+        </div>
+
+        <!-- System Owners -->
+        <div class="endpoint-group">
+            <h2>👥 System Owners</h2>
+            
+            <div class="endpoint">
+                <span class="method post">POST</span>
+                <span class="endpoint-url">/api/v1/systems/:systemId/owners</span>
+                <div class="form-group">
+                    <label>System:</label>
+                    <select id="owner-system-select"></select>
+                </div>
+                <div class="form-group">
+                    <label>User:</label>
+                    <select id="owner-user-select"></select>
+                </div>
+                <button class="test-btn" onclick="assignOwner()">Assign Owner</button>
+                <div id="result-assign-owner" class="result" style="display:none;"></div>
+            </div>
+
+            <div class="endpoint">
+                <span class="method get">GET</span>
+                <span class="endpoint-url">/api/v1/systems/:systemId/owners</span>
+                <div class="form-group">
+                    <label>System:</label>
+                    <select id="list-owner-system-select"></select>
+                </div>
+                <button class="test-btn" onclick="listOwners()">List Owners</button>
+                <div id="result-list-owners" class="result" style="display:none;"></div>
+            </div>
+
+            <div class="endpoint">
+                <span class="method get">GET</span>
+                <span class="endpoint-url">/api/v1/users/:userId/owned-systems</span>
+                <div class="form-group">
+                    <label>User:</label>
+                    <select id="list-owned-systems-user-select"></select>
+                </div>
+                <button class="test-btn" onclick="listOwnedSystems()">List Systems Owned</button>
+                <div id="result-list-owned-systems" class="result" style="display:none;"></div>
+            </div>
+        </div>
+
+        <!-- Access Grants -->
+        <div class="endpoint-group">
+            <h2>🔐 Access Grants</h2>
+
+            <div class="endpoint">
+                <span class="method post">POST</span>
+                <span class="endpoint-url">/api/v1/access-grants</span>
+                <div class="form-group">
+                    <label>User:</label>
+                    <select id="grant-user-select"></select>
+                </div>
+                <div class="form-group">
+                    <label>System:</label>
+                    <select id="grant-system-select" onchange="onGrantSystemChange()"></select>
+                </div>
+                <div class="form-group">
+                    <label>Instance:</label>
+                    <select id="grant-instance-select"></select>
+                </div>
+                <div class="form-group">
+                    <label>Access Tier:</label>
+                    <select id="grant-tier-select"></select>
+                </div>
+                <div class="form-group">
+                    <label>Granted At (optional ISO date):</label>
+                    <input type="text" id="grant-granted-at" placeholder="2024-01-01T00:00:00Z">
+                </div>
+                <button class="test-btn" onclick="createGrant()">Create Access Grant</button>
+                <div id="result-create-grant" class="result" style="display:none;"></div>
+            </div>
+
+            <div class="endpoint">
+                <span class="method patch">PATCH</span>
+                <span class="endpoint-url">/api/v1/access-grants/:id/status</span>
+                <div class="form-group">
+                    <label>Grant ID:</label>
+                    <input type="text" id="grant-status-id" placeholder="grant uuid">
+                </div>
+                <div class="form-group">
+                    <label>Status:</label>
+                    <select id="grant-status-select">
+                        <option value="active">active</option>
+                        <option value="removed">removed</option>
+                    </select>
+                </div>
+                <button class="test-btn" onclick="updateGrantStatus()">Update Status</button>
+                <div id="result-update-grant-status" class="result" style="display:none;"></div>
+            </div>
+        </div>
+        
+        <!-- Access Overview -->
+        <div class="endpoint-group">
+            <h2>📊 Access Overview</h2>
+            
+            <div class="endpoint">
+                <span class="method get">GET</span>
+                <span class="endpoint-url">/api/v1/access-overview</span>
+                <div class="form-group">
+                    <label>User (optional):</label>
+                    <select id="overview-user-select"><option value="">-- any --</option></select>
+                </div>
+                <div class="form-group">
+                    <label>System (optional):</label>
+                    <select id="overview-system-select"><option value="">-- any --</option></select>
+                </div>
+                <div class="form-group">
+                    <label>Status:</label>
+                    <select id="overview-status-select">
+                        <option value="">-- any --</option>
+                        <option value="active">active</option>
+                        <option value="removed">removed</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Page:</label>
+                    <input type="number" id="overview-page" value="1" min="1">
+                </div>
+                <div class="form-group">
+                    <label>Limit:</label>
+                    <input type="number" id="overview-limit" value="10" min="1" max="100">
+                </div>
+                <button class="test-btn" onclick="testAccessOverview()">Get Access Overview</button>
+                <div id="result-access-overview" class="result" style="display:none;"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const API_BASE = 'http://localhost:3000';
+        let usersCache = [];
+        let systemsCache = [];
+        let instancesCache = {};
+        let tiersCache = {};
+        let currentUser = null;
+        let authToken = null;
+
+        // Load saved token and user info on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            authToken = localStorage.getItem('authToken');
+            const savedUser = localStorage.getItem('currentUser');
+            if (authToken && savedUser) {
+                currentUser = JSON.parse(savedUser);
+                document.getElementById('auth-token').value = authToken;
+                updateLoginStatus();
+            }
+            fetchUsersAndSystems();
+        });
+
+        function updateLoginStatus() {
+            const statusBar = document.getElementById('login-status-bar');
+            if (currentUser && authToken) {
+                statusBar.style.display = 'block';
+                document.getElementById('logged-in-email').textContent = currentUser.email;
+                document.getElementById('logged-in-role').textContent = currentUser.role || 'user';
+            } else {
+                statusBar.style.display = 'none';
+            }
+        }
+
+        function logout() {
+            authToken = null;
+            currentUser = null;
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('currentUser');
+            document.getElementById('auth-token').value = '';
+            updateLoginStatus();
+            window.location.href = 'index.html';
+        }
+        
+        function showResult(elementId, data, isError = false) {
+            const element = document.getElementById(elementId);
+            element.style.display = 'block';
+            element.className = 'result ' + (isError ? 'error' : 'success');
+            element.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+        }
+        
+        function setLoading(elementId, message = 'Loading...') {
+            const el = document.getElementById(elementId);
+            el.style.display = 'block';
+            el.className = 'result';
+            el.textContent = message;
+        }
+
+        function populateSelect(selectId, items, valueKey, labelKey, includeAny = false) {
+            const select = document.getElementById(selectId);
+            select.innerHTML = '';
+            if (includeAny) {
+                const opt = document.createElement('option');
+                opt.value = '';
+                opt.textContent = '-- any --';
+                select.appendChild(opt);
+            }
+            items.forEach((item) => {
+                const opt = document.createElement('option');
+                opt.value = item[valueKey];
+                opt.textContent = item[labelKey];
+                select.appendChild(opt);
+            });
+        }
+
+        async function fetchUsersAndSystems() {
+            const [usersResp, systemsResp] = await Promise.all([
+                fetch(`${API_BASE}/api/v1/users?page=1&limit=100`),
+                fetch(`${API_BASE}/api/v1/systems`)
+            ]);
+            const usersData = await usersResp.json();
+            const systemsData = await systemsResp.json();
+            usersCache = usersData.data || usersData || [];
+            systemsCache = systemsData || [];
+
+            populateSelect('owner-user-select', usersCache, 'id', 'email');
+            populateSelect('list-owned-systems-user-select', usersCache, 'id', 'email');
+            populateSelect('grant-user-select', usersCache, 'id', 'email');
+            populateSelect('overview-user-select', usersCache, 'id', 'email', true);
+
+            populateSelect('owner-system-select', systemsCache, 'id', 'name');
+            populateSelect('list-owner-system-select', systemsCache, 'id', 'name');
+            populateSelect('grant-system-select', systemsCache, 'id', 'name');
+            populateSelect('overview-system-select', systemsCache, 'id', 'name', true);
+        }
+
+        async function loadInstances(systemId, selectId) {
+            if (!systemId) {
+                populateSelect(selectId, [], 'id', 'name');
+                return;
+            }
+            if (instancesCache[systemId]) {
+                populateSelect(selectId, instancesCache[systemId], 'id', 'name');
+                return;
+            }
+            const resp = await fetch(`${API_BASE}/api/v1/systems/${systemId}/instances`);
+            const data = await resp.json();
+            instancesCache[systemId] = data || [];
+            populateSelect(selectId, instancesCache[systemId], 'id', 'name');
+        }
+
+        async function loadTiers(systemId, selectId) {
+            if (!systemId) {
+                populateSelect(selectId, [], 'id', 'name');
+                return;
+            }
+            if (tiersCache[systemId]) {
+                populateSelect(selectId, tiersCache[systemId], 'id', 'name');
+                return;
+            }
+            const resp = await fetch(`${API_BASE}/api/v1/systems/${systemId}/access-tiers`);
+            const data = await resp.json();
+            tiersCache[systemId] = data || [];
+            populateSelect(selectId, tiersCache[systemId], 'id', 'name');
+        }
+
+        async function login() {
+            setLoading('result-login');
+            try {
+                const email = document.getElementById('login-email').value;
+                const password = document.getElementById('login-password').value;
+                const response = await fetch(API_BASE + '/api/v1/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const data = await response.json();
+                if (response.ok && data.token) {
+                    // Store token and fetch user info
+                    authToken = data.token;
+                    localStorage.setItem('authToken', authToken);
+                    document.getElementById('auth-token').value = authToken;
+                    
+                    // Fetch user info
+                    const meResponse = await fetch(API_BASE + '/api/v1/auth/me?token=' + encodeURIComponent(authToken));
+                    if (meResponse.ok) {
+                        currentUser = await meResponse.json();
+                        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                        updateLoginStatus();
+                        showResult('result-login', { message: 'Login successful!', token: data.token, user: currentUser });
+                    } else {
+                        showResult('result-login', data);
+                    }
+                } else {
+                    showResult('result-login', data, true);
+                }
+            } catch (error) {
+                showResult('result-login', 'Error: ' + error.message, true);
+            }
+        }
+
+        async function getMe() {
+            setLoading('result-me');
+            try {
+                const token = document.getElementById('auth-token').value || authToken;
+                if (!token) {
+                    showResult('result-me', 'Error: Please provide a token (login first or paste token)', true);
+                    return;
+                }
+                const response = await fetch(API_BASE + '/api/v1/auth/me?token=' + encodeURIComponent(token));
+                const data = await response.json();
+                if (response.ok) {
+                    currentUser = data;
+                    authToken = token;
+                    localStorage.setItem('authToken', authToken);
+                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    updateLoginStatus();
+                }
+                showResult('result-me', data, !response.ok);
+            } catch (error) {
+                showResult('result-me', 'Error: ' + error.message, true);
+            }
+        }
+
+        async function testGetUsers() {
+            setLoading('result-users-list');
+            try {
+                const response = await fetch(API_BASE + '/api/v1/users?page=1&limit=10');
+                const data = await response.json();
+                showResult('result-users-list', data, !response.ok);
+            } catch (error) {
+                showResult('result-users-list', 'Error: ' + error.message, true);
+            }
+        }
+        
+        async function testGetSystems() {
+            setLoading('result-systems-list');
+            try {
+                const response = await fetch(API_BASE + '/api/v1/systems');
+                const data = await response.json();
+                showResult('result-systems-list', data, !response.ok);
+            } catch (error) {
+                showResult('result-systems-list', 'Error: ' + error.message, true);
+            }
+        }
+        
+        async function createUser() {
+            const email = document.getElementById('user-email').value;
+            const name = document.getElementById('user-name').value;
+            setLoading('result-create-user', 'Creating user...');
+            try {
+                const response = await fetch(API_BASE + '/api/v1/users', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, name })
+                });
+                const data = await response.json();
+                showResult('result-create-user', data, !response.ok);
+                await fetchUsersAndSystems();
+            } catch (error) {
+                showResult('result-create-user', 'Error: ' + error.message, true);
+            }
+        }
+        
+        async function createSystem() {
+            const name = document.getElementById('system-name').value;
+            const description = document.getElementById('system-desc').value;
+            const body = { name };
+            if (description) body.description = description;
+            setLoading('result-create-system', 'Creating system...');
+            try {
+                const response = await fetch(API_BASE + '/api/v1/systems', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                const data = await response.json();
+                showResult('result-create-system', data, !response.ok);
+                await fetchUsersAndSystems();
+            } catch (error) {
+                showResult('result-create-system', 'Error: ' + error.message, true);
+            }
+        }
+
+        // System Owners
+        async function assignOwner() {
+            const systemId = document.getElementById('owner-system-select').value;
+            const userId = document.getElementById('owner-user-select').value;
+            setLoading('result-assign-owner', 'Assigning owner...');
+            try {
+                const resp = await fetch(`${API_BASE}/api/v1/systems/${systemId}/owners`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId }),
+                });
+                const data = await resp.json();
+                showResult('result-assign-owner', data, !resp.ok);
+            } catch (err) {
+                showResult('result-assign-owner', 'Error: ' + err.message, true);
+            }
+        }
+
+        async function listOwners() {
+            const systemId = document.getElementById('list-owner-system-select').value;
+            setLoading('result-list-owners');
+            try {
+                const resp = await fetch(`${API_BASE}/api/v1/systems/${systemId}/owners`);
+                const data = await resp.json();
+                showResult('result-list-owners', data, !resp.ok);
+            } catch (err) {
+                showResult('result-list-owners', 'Error: ' + err.message, true);
+            }
+        }
+
+        async function listOwnedSystems() {
+            const userId = document.getElementById('list-owned-systems-user-select').value;
+            setLoading('result-list-owned-systems');
+            try {
+                const resp = await fetch(`${API_BASE}/api/v1/users/${userId}/owned-systems`);
+                const data = await resp.json();
+                showResult('result-list-owned-systems', data, !resp.ok);
+            } catch (err) {
+                showResult('result-list-owned-systems', 'Error: ' + err.message, true);
+            }
+        }
+
+        // Access Grants
+        async function onGrantSystemChange() {
+            const systemId = document.getElementById('grant-system-select').value;
+            await loadInstances(systemId, 'grant-instance-select');
+            await loadTiers(systemId, 'grant-tier-select');
+        }
+
+        async function createGrant() {
+            const userId = document.getElementById('grant-user-select').value;
+            const systemId = document.getElementById('grant-system-select').value;
+            const systemInstanceId = document.getElementById('grant-instance-select').value;
+            const accessTierId = document.getElementById('grant-tier-select').value;
+            const grantedAt = document.getElementById('grant-granted-at').value || undefined;
+
+            setLoading('result-create-grant', 'Creating access grant...');
+            try {
+                const resp = await fetch(`${API_BASE}/api/v1/access-grants`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId, systemInstanceId, accessTierId, grantedAt }),
+                });
+                const data = await resp.json();
+                showResult('result-create-grant', data, !resp.ok);
+            } catch (err) {
+                showResult('result-create-grant', 'Error: ' + err.message, true);
+            }
+        }
+
+        async function updateGrantStatus() {
+            const id = document.getElementById('grant-status-id').value;
+            const status = document.getElementById('grant-status-select').value;
+            setLoading('result-update-grant-status', 'Updating status...');
+            try {
+                const resp = await fetch(`${API_BASE}/api/v1/access-grants/${id}/status`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status }),
+                });
+                const data = await resp.json();
+                showResult('result-update-grant-status', data, !resp.ok);
+            } catch (err) {
+                showResult('result-update-grant-status', 'Error: ' + err.message, true);
+            }
+        }
+
+        // Access Overview
+        async function testAccessOverview() {
+            const page = document.getElementById('overview-page').value;
+            const limit = document.getElementById('overview-limit').value;
+            const userId = document.getElementById('overview-user-select').value;
+            const systemId = document.getElementById('overview-system-select').value;
+            const status = document.getElementById('overview-status-select').value;
+
+            const params = new URLSearchParams({ page, limit });
+            if (userId) params.append('userId', userId);
+            if (systemId) params.append('systemId', systemId);
+            if (status) params.append('status', status);
+
+            setLoading('result-access-overview');
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/access-overview?${params.toString()}`);
+                const data = await response.json();
+                showResult('result-access-overview', data, !response.ok);
+            } catch (error) {
+                showResult('result-access-overview', 'Error: ' + error.message, true);
+            }
+        }
+
+        // Initial data load
+        window.addEventListener('load', async () => {
+            await fetchUsersAndSystems();
+            // preload instances/tiers for first system if exists
+            const firstSystem = systemsCache[0];
+            if (firstSystem) {
+                document.getElementById('grant-system-select').value = firstSystem.id;
+                await onGrantSystemChange();
+            }
+        });
+    </script>
+</body>
+</html>
+
