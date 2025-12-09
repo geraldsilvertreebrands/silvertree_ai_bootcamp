@@ -1,8 +1,39 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, ExceptionFilter, Catch, ArgumentsHost, HttpException, HttpStatus } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 import { AppModule } from './app.module';
+
+@Catch()
+export class AllExceptionsFilter implements ExceptionFilter {
+  catch(exception: unknown, host: ArgumentsHost) {
+    const ctx = host.switchToHttp();
+    const response = ctx.getResponse();
+    const request = ctx.getRequest();
+    
+    const status = exception instanceof HttpException
+      ? exception.getStatus()
+      : HttpStatus.INTERNAL_SERVER_ERROR;
+    
+    const message = exception instanceof HttpException
+      ? (typeof exception.getResponse() === 'string' 
+          ? exception.getResponse() 
+          : (exception.getResponse() as any).message || exception.message)
+      : exception instanceof Error
+      ? exception.message
+      : 'Internal server error';
+    
+    console.error(`[${request.method}] ${request.url} - Error:`, message, exception);
+    
+    response.status(status).json({
+      statusCode: status,
+      message: Array.isArray(message) ? message.join(', ') : message,
+      error: exception instanceof HttpException ? exception.name : 'Error',
+      timestamp: new Date().toISOString(),
+      path: request.url,
+    });
+  }
+}
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
@@ -36,6 +67,9 @@ async function bootstrap() {
   //     skipUndefinedProperties: true,
   //   }),
   // );
+
+  // Global exception filter for better error messages
+  app.useGlobalFilters(new AllExceptionsFilter());
 
   // API prefix
   app.setGlobalPrefix('api/v1');

@@ -227,5 +227,164 @@ describe('AccessRequestService (Integration)', () => {
     });
     expect(grants.length).toBe(1);
   });
+
+  describe('System Owner Approval', () => {
+    let systemOwner: User;
+    let nonOwner: User;
+    let requestUser: User;
+    let ownerSystem: System;
+    let ownerInstance: SystemInstance;
+    let ownerTier: AccessTier;
+
+    beforeEach(async () => {
+      const timestamp = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      systemOwner = await userRepo.save(
+        userRepo.create({
+          email: `owner-${timestamp}@test.com`,
+          name: 'System Owner',
+        }),
+      );
+      nonOwner = await userRepo.save(
+        userRepo.create({
+          email: `nonowner-${timestamp}@test.com`,
+          name: 'Non Owner',
+        }),
+      );
+      requestUser = await userRepo.save(
+        userRepo.create({
+          email: `requester-${timestamp}@test.com`,
+          name: 'Requester',
+        }),
+      );
+
+      ownerSystem = await systemRepo.save(
+        systemRepo.create({
+          name: `Owner System ${timestamp}`,
+          description: 'Test',
+        }),
+      );
+      ownerInstance = await instanceRepo.save(
+        instanceRepo.create({
+          systemId: ownerSystem.id,
+          name: `Owner Instance ${timestamp}`,
+          region: 'US',
+        }),
+      );
+      ownerTier = await tierRepo.save(
+        tierRepo.create({
+          systemId: ownerSystem.id,
+          name: `owner-tier-${timestamp}`,
+          description: 'Test',
+        }),
+      );
+
+      const { SystemOwner } = await import('../../src/ownership/entities/system-owner.entity');
+      const ownerRepo = module.get<Repository<SystemOwner>>(getRepositoryToken(SystemOwner));
+      await ownerRepo.save(
+        ownerRepo.create({
+          userId: systemOwner.id,
+          systemId: ownerSystem.id,
+        }),
+      );
+    });
+
+    it('system owner can approve a request and create grants', async () => {
+      const dto: CreateAccessRequestDto = {
+        targetUserId: requestUser.id,
+        items: [
+          {
+            systemInstanceId: ownerInstance.id,
+            accessTierId: ownerTier.id,
+          },
+        ],
+      };
+      const request = await accessRequestService.create(dto, nonOwner.id);
+      expect(request.status).toBe(AccessRequestStatus.REQUESTED);
+      expect(request.items[0].status).toBe(AccessRequestItemStatus.REQUESTED);
+
+      const approved = await accessRequestService.approveRequest(request.id, systemOwner.id);
+      expect(approved.status).toBe(AccessRequestStatus.APPROVED);
+      expect(approved.items[0].status).toBe(AccessRequestItemStatus.APPROVED);
+
+      const grants = await grantRepo.find({
+        where: {
+          userId: requestUser.id,
+          systemInstanceId: ownerInstance.id,
+          accessTierId: ownerTier.id,
+          status: AccessGrantStatus.ACTIVE,
+        },
+      });
+      expect(grants.length).toBe(1);
+    });
+
+    it('system owner can reject a request without creating grants', async () => {
+      const dto: CreateAccessRequestDto = {
+        targetUserId: requestUser.id,
+        items: [
+          {
+            systemInstanceId: ownerInstance.id,
+            accessTierId: ownerTier.id,
+          },
+        ],
+      };
+      const request = await accessRequestService.create(dto, nonOwner.id);
+
+      const rejected = await accessRequestService.rejectRequest(request.id, systemOwner.id);
+      expect(rejected.status).toBe(AccessRequestStatus.REJECTED);
+      expect(rejected.items[0].status).toBe(AccessRequestItemStatus.REJECTED);
+
+      const grants = await grantRepo.find({
+        where: {
+          userId: requestUser.id,
+          systemInstanceId: ownerInstance.id,
+          accessTierId: ownerTier.id,
+        },
+      });
+      expect(grants.length).toBe(0);
+    });
+
+    it('non-owner cannot approve a request', async () => {
+      const dto: CreateAccessRequestDto = {
+        targetUserId: requestUser.id,
+        items: [
+          {
+            systemInstanceId: ownerInstance.id,
+            accessTierId: ownerTier.id,
+          },
+        ],
+      };
+      const request = await accessRequestService.create(dto, nonOwner.id);
+
+      await expect(
+        accessRequestService.approveRequest(request.id, nonOwner.id),
+      ).rejects.toThrow('You are not authorized');
+    });
+
+    it('system owner can approve individual item', async () => {
+      const dto: CreateAccessRequestDto = {
+        targetUserId: requestUser.id,
+        items: [
+          {
+            systemInstanceId: ownerInstance.id,
+            accessTierId: ownerTier.id,
+          },
+        ],
+      };
+      const request = await accessRequestService.create(dto, nonOwner.id);
+
+      const approved = await accessRequestService.approveItem(request.items[0].id, systemOwner.id);
+      expect(approved.status).toBe(AccessRequestItemStatus.APPROVED);
+
+      const grants = await grantRepo.find({
+        where: {
+          userId: requestUser.id,
+          systemInstanceId: ownerInstance.id,
+          accessTierId: ownerTier.id,
+          status: AccessGrantStatus.ACTIVE,
+        },
+      });
+      expect(grants.length).toBe(1);
+    });
+  });
 });
 

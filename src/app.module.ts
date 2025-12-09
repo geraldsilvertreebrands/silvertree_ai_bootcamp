@@ -12,6 +12,7 @@ import { SystemsModule } from './systems/systems.module';
 import { AccessControlModule } from './access-control/access-control.module';
 import { OwnershipModule } from './ownership/ownership.module';
 import { AuthModule } from './auth/auth.module';
+import { AccessRequest, AccessRequestItem } from './access-control/entities/access-request.entity';
 
 @Module({
   imports: [
@@ -25,7 +26,16 @@ import { AuthModule } from './auth/auth.module';
       username: process.env.DB_USERNAME || 'postgres',
       password: process.env.DB_PASSWORD || 'postgres',
       database: process.env.DB_DATABASE || 'bootcamp_access',
-      entities: [User, System, SystemInstance, AccessTier, SystemOwner, AccessGrant],
+      entities: [
+        User,
+        System,
+        SystemInstance,
+        AccessTier,
+        SystemOwner,
+        AccessGrant,
+        AccessRequest,
+        AccessRequestItem,
+      ],
       synchronize: false, // NEVER use true - always use migrations for schema changes
       logging: process.env.NODE_ENV === 'development',
     }),

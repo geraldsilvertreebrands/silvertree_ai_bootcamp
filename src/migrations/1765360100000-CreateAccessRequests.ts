@@ -4,6 +4,13 @@ export class CreateAccessRequests1765360100000 implements MigrationInterface {
   name = 'CreateAccessRequests1765360100000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(
+      `CREATE TYPE "public"."access_requests_status_enum" AS ENUM('requested', 'approved', 'rejected')`,
+    );
+    await queryRunner.query(
+      `CREATE TYPE "public"."access_request_items_status_enum" AS ENUM('requested', 'approved', 'rejected')`,
+    );
+
     await queryRunner.query(`
       CREATE TABLE "access_requests" (
         "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
@@ -58,6 +65,8 @@ export class CreateAccessRequests1765360100000 implements MigrationInterface {
     await queryRunner.query(`ALTER TABLE "access_requests" DROP CONSTRAINT "FK_access_requests_targetUser"`);
     await queryRunner.query(`DROP TABLE "access_request_items"`);
     await queryRunner.query(`DROP TABLE "access_requests"`);
+    await queryRunner.query(`DROP TYPE "public"."access_request_items_status_enum"`);
+    await queryRunner.query(`DROP TYPE "public"."access_requests_status_enum"`);
   }
 }
 

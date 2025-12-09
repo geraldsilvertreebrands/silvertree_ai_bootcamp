@@ -16,6 +16,7 @@ const seedUsers = [
   { name: 'Emma Wilson', email: 'emma.wilson@silvertreebrands.com' },
   { name: 'Michael Chen', email: 'michael.chen@silvertreebrands.com' },
   { name: 'David van Niekerk', email: 'david.vanniekerk@silvertreebrands.com' },
+  { name: 'Gerald Sadya', email: 'geralds@silvertreebrands.com' },
 ];
 
 const seedSystems = [
@@ -35,6 +36,17 @@ export async function seedDatabase(dataSource: DataSource) {
 
   console.log('🌱 Seeding database...');
 
+  // Clean up access requests first (they reference users)
+  console.log('Cleaning up access requests...');
+  try {
+    await dataSource.query('DELETE FROM access_request_items');
+    await dataSource.query('DELETE FROM access_requests');
+    console.log('  ✓ Cleared all access requests');
+  } catch (error) {
+    // Ignore if table doesn't exist yet
+    console.log('  - Access requests table does not exist yet');
+  }
+
   // Clean up test users first (must delete grants first due to foreign key constraints)
   console.log('Cleaning up test users...');
   const testUsers = await userRepository
@@ -48,7 +60,20 @@ export async function seedDatabase(dataSource: DataSource) {
   if (testUsers.length > 0) {
     const testUserIds = testUsers.map(u => u.id);
     
-    // Delete access grants for test users first
+    // Delete access requests for test users first
+    try {
+      const { AccessRequest } = await import('../access-control/entities/access-request.entity');
+      const accessRequestRepository = dataSource.getRepository(AccessRequest);
+      await accessRequestRepository
+        .createQueryBuilder()
+        .delete()
+        .where('requesterId IN (:...userIds) OR targetUserId IN (:...userIds)', { userIds: testUserIds })
+        .execute();
+    } catch (error) {
+      // Ignore if table doesn't exist yet
+    }
+    
+    // Delete access grants for test users
     await grantRepository
       .createQueryBuilder()
       .delete()
@@ -82,6 +107,19 @@ export async function seedDatabase(dataSource: DataSource) {
   if (csvSampleUsers.length > 0) {
     const csvUserIds = csvSampleUsers.map((u) => u.id);
 
+    // Delete access requests for CSV sample users
+    try {
+      const { AccessRequest } = await import('../access-control/entities/access-request.entity');
+      const accessRequestRepository = dataSource.getRepository(AccessRequest);
+      await accessRequestRepository
+        .createQueryBuilder()
+        .delete()
+        .where('requesterId IN (:...userIds) OR targetUserId IN (:...userIds)', { userIds: csvUserIds })
+        .execute();
+    } catch (error) {
+      // Ignore if table doesn't exist yet
+    }
+
     await grantRepository
       .createQueryBuilder()
       .delete()
@@ -98,6 +136,105 @@ export async function seedDatabase(dataSource: DataSource) {
 
     await userRepository.remove(csvSampleUsers);
     console.log(`  ✓ Removed ${csvSampleUsers.length} CSV sample user(s)`);
+  }
+
+  // Remove all grants for Gerald Sadya (for demo purposes)
+  console.log('Clearing Gerald Sadya access grants...');
+  const geraldUser = await userRepository.findOne({
+    where: { email: 'geralds@silvertreebrands.com' },
+  });
+  if (geraldUser) {
+    // Delete access requests for Gerald
+    try {
+      const { AccessRequest } = await import('../access-control/entities/access-request.entity');
+      const accessRequestRepository = dataSource.getRepository(AccessRequest);
+      await accessRequestRepository
+        .createQueryBuilder()
+        .delete()
+        .where('requesterId = :userId OR targetUserId = :userId', { userId: geraldUser.id })
+        .execute();
+    } catch (error) {
+      // Ignore if table doesn't exist yet
+    }
+
+    // Delete all grants for Gerald
+    await grantRepository
+      .createQueryBuilder()
+      .delete()
+      .where('userId = :userId', { userId: geraldUser.id })
+      .execute();
+    
+    console.log(`  ✓ Cleared all access grants for Gerald Sadya`);
+  } else {
+    console.log(`  - Gerald Sadya not found`);
+  }
+
+  // Clean up test systems (keep only real Silvertree systems)
+  console.log('Cleaning up test systems...');
+  const validSystemNames = seedSystems.map(s => s.name);
+  const allSystems = await systemRepository.find();
+  const testSystems = allSystems.filter(s => !validSystemNames.includes(s.name));
+  
+  if (testSystems.length > 0) {
+    const testSystemIds = testSystems.map(s => s.id);
+    
+    // Get all instances for test systems first
+    const testInstances = await instanceRepository.find({
+      where: testSystemIds.map(id => ({ systemId: id })),
+    });
+    const testInstanceIds = testInstances.map(i => i.id);
+    
+    // Delete access grants for test systems
+    if (testInstanceIds.length > 0) {
+      await grantRepository
+        .createQueryBuilder()
+        .delete()
+        .where('systemInstanceId IN (:...instanceIds)', { instanceIds: testInstanceIds })
+        .execute();
+    }
+    
+    // Delete access request items for test systems
+    if (testInstanceIds.length > 0) {
+      try {
+        const { AccessRequestItem } = await import('../access-control/entities/access-request.entity');
+        const accessRequestItemRepository = dataSource.getRepository(AccessRequestItem);
+        await accessRequestItemRepository
+          .createQueryBuilder()
+          .delete()
+          .where('systemInstanceId IN (:...instanceIds)', { instanceIds: testInstanceIds })
+          .execute();
+      } catch (error) {
+        // Ignore if table doesn't exist yet
+      }
+    }
+    
+    // Delete system owners for test systems
+    const { SystemOwner } = await import('../ownership/entities/system-owner.entity');
+    const systemOwnerRepository = dataSource.getRepository(SystemOwner);
+    await systemOwnerRepository
+      .createQueryBuilder()
+      .delete()
+      .where('systemId IN (:...systemIds)', { systemIds: testSystemIds })
+      .execute();
+    
+    // Delete instances and tiers for test systems
+    await instanceRepository
+      .createQueryBuilder()
+      .delete()
+      .where('systemId IN (:...systemIds)', { systemIds: testSystemIds })
+      .execute();
+    
+    await tierRepository
+      .createQueryBuilder()
+      .delete()
+      .where('systemId IN (:...systemIds)', { systemIds: testSystemIds })
+      .execute();
+    
+    // Delete the test systems
+    await systemRepository.remove(testSystems);
+    console.log(`  ✓ Removed ${testSystems.length} test system(s) and their associated data`);
+  } else {
+    console.log(`  - No test systems found`);
   }
 
   // Seed Users

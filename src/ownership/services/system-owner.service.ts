@@ -117,6 +117,13 @@ export class SystemOwnerService {
     // Remove ownership
     await this.systemOwnerRepository.remove(owner);
   }
+
+  async isSystemOwner(userId: string, systemId: string): Promise<boolean> {
+    const owner = await this.systemOwnerRepository.findOne({
+      where: { userId, systemId },
+    });
+    return !!owner;
+  }
 }
 
 

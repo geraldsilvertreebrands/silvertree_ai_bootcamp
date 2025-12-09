@@ -39,6 +39,7 @@ Use these when building or modifying the app so a new contributor can ramp quick
 - Keep `docs/ARCHITECTURE.md` and `docs/DECISIONS.md` in sync with changes; add ADRs for significant shifts.
 - Before changing flows/features, skim relevant `docs/` (PRD, PHASES, DECISIONS, TEST_STRATEGY) and align edits.
 - PRD expectations (Phase 1) drive acceptance (access overview visibility, duplicate prevention, audit trail).
+- Do not push to remote unless the user explicitly requests it.
 
 ## Future-proofing
 - Keep modules independent to allow later extraction to services.

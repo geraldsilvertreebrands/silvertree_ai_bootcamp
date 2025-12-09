@@ -10,6 +10,7 @@ import { DuplicateEmailException } from '../../common/exceptions/duplicate-email
 import { InvalidManagerException } from '../../common/exceptions/invalid-manager.exception';
 import { AccessGrant } from '../../access-control/entities/access-grant.entity';
 import { AccessGrantStatus } from '../../access-control/entities/access-grant.entity';
+import { AccessRequest } from '../../access-control/entities/access-request.entity';
 
 @Injectable()
 export class UserService {
@@ -18,6 +19,8 @@ export class UserService {
     private readonly userRepository: Repository<User>,
     @InjectRepository(AccessGrant)
     private readonly accessGrantRepository: Repository<AccessGrant>,
+    @InjectRepository(AccessRequest)
+    private readonly accessRequestRepository: Repository<AccessRequest>,
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
@@ -180,5 +183,46 @@ export class UserService {
     }
 
     return false;
+  }
+
+  async getMyGrants(userId: string) {
+    const grants = await this.accessGrantRepository.find({
+      where: { userId },
+      relations: [
+        'user',
+        'systemInstance',
+        'systemInstance.system',
+        'accessTier',
+        'grantedBy',
+      ],
+      order: { grantedAt: 'DESC' },
+    });
+
+    return {
+      data: grants,
+    };
+  }
+
+  async getMyRequests(userId: string) {
+    // Get requests where user is either the requester or the target
+    const requests = await this.accessRequestRepository.find({
+      where: [
+        { requesterId: userId },
+        { targetUserId: userId },
+      ],
+      relations: [
+        'requester',
+        'targetUser',
+        'items',
+        'items.systemInstance',
+        'items.systemInstance.system',
+        'items.accessTier',
+      ],
+      order: { createdAt: 'DESC' },
+    });
+
+    return {
+      data: requests,
+    };
   }
 }

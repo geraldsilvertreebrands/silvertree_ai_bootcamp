@@ -9,6 +9,8 @@ import {
   Query,
   HttpCode,
   HttpStatus,
+  Headers,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { UserService } from '../services/user.service';
 import { CreateUserDto } from '../dto/create-user.dto';
@@ -16,10 +18,14 @@ import { UpdateUserDto } from '../dto/update-user.dto';
 import { AssignManagerDto } from '../dto/assign-manager.dto';
 import { PaginationDto } from '../dto/pagination.dto';
 import { UserNotFoundException } from '../../common/exceptions/user-not-found.exception';
+import { AuthService } from '../../auth/auth.service';
 
 @Controller('users')
 export class UsersController {
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    private readonly userService: UserService,
+    private readonly authService: AuthService,
+  ) {}
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
@@ -55,5 +61,45 @@ export class UsersController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@Param('id') id: string) {
     await this.userService.remove(id);
+  }
+
+  @Get('me/grants')
+  async getMyGrants(@Headers('authorization') authHeader?: string) {
+    if (!authHeader) {
+      throw new UnauthorizedException('Missing authorization header');
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    const user = await this.authService.me(token);
+    if (!user) {
+      throw new UnauthorizedException('Invalid token');
+    }
+
+    const dbUser = await this.userService.findByEmail(user.email);
+    if (!dbUser) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    return await this.userService.getMyGrants(dbUser.id);
+  }
+
+  @Get('me/requests')
+  async getMyRequests(@Headers('authorization') authHeader?: string) {
+    if (!authHeader) {
+      throw new UnauthorizedException('Missing authorization header');
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    const user = await this.authService.me(token);
+    if (!user) {
+      throw new UnauthorizedException('Invalid token');
+    }
+
+    const dbUser = await this.userService.findByEmail(user.email);
+    if (!dbUser) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    return await this.userService.getMyRequests(dbUser.id);
   }
 }

@@ -16,6 +16,7 @@ import { AccessTier } from '../../systems/entities/access-tier.entity';
 export enum AccessRequestStatus {
   REQUESTED = 'requested',
   APPROVED = 'approved',
+  REJECTED = 'rejected',
 }
 
 @Entity('access_requests')
@@ -62,6 +63,7 @@ export class AccessRequest {
 export enum AccessRequestItemStatus {
   REQUESTED = 'requested',
   APPROVED = 'approved',
+  REJECTED = 'rejected',
 }
 
 @Entity('access_request_items')

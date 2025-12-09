@@ -294,7 +294,8 @@
             margin-bottom: 8px;
         }
         .form-group select,
-        .form-group input {
+        .form-group input,
+        .input {
             width: 100%;
             padding: 10px 12px;
             background: var(--input);
@@ -305,10 +306,16 @@
             font-family: inherit;
         }
         .form-group select:focus,
-        .form-group input:focus {
+        .form-group input:focus,
+        .input:focus {
             outline: none;
             border-color: var(--ring);
             box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.1);
+        }
+        .input:disabled {
+            background: var(--muted);
+            color: var(--muted-foreground);
+            cursor: not-allowed;
         }
         .search-box {
             position: relative;
@@ -450,6 +457,305 @@
             background: #ff453a;
             color: white;
         }
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .badge-success {
+            background: #10b981;
+            color: white;
+        }
+        .badge-warning {
+            background: #f59e0b;
+            color: white;
+        }
+        .badge-error {
+            background: #ef4444;
+            color: white;
+        }
+        
+        /* My Access View Styles */
+        .access-header {
+            margin-bottom: 48px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border);
+        }
+        .access-header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--foreground);
+            margin-bottom: 8px;
+        }
+        .access-header p {
+            font-size: 15px;
+            color: var(--muted-foreground);
+            font-weight: 400;
+        }
+        
+        /* Section Headers */
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .section-header-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--card);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .section-header-icon svg {
+            width: 18px;
+            height: 18px;
+            color: var(--foreground);
+        }
+        .section-header-text {
+            flex: 1;
+        }
+        .section-header-text h2 {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--foreground);
+            margin-bottom: 2px;
+        }
+        .section-header-text p {
+            font-size: 13px;
+            color: var(--muted-foreground);
+            font-weight: 400;
+        }
+        .section-count {
+            background: var(--card);
+            color: var(--muted-foreground);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 64px 32px;
+            background: var(--card);
+            border-radius: 8px;
+        }
+        .empty-state-icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 16px;
+            background: var(--card);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .empty-state-icon svg {
+            width: 24px;
+            height: 24px;
+            color: var(--muted-foreground);
+        }
+        .empty-state-title {
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--foreground);
+            margin-bottom: 6px;
+        }
+        .empty-state-text {
+            font-size: 14px;
+            color: var(--muted-foreground);
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        
+        /* Grant Cards */
+        .grant-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 12px;
+            border: 1px solid var(--border);
+            transition: border-color 0.2s ease;
+        }
+        .grant-card:hover {
+            border-color: var(--accent);
+        }
+        .grant-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .grant-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--card);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .grant-icon svg {
+            width: 20px;
+            height: 20px;
+            color: var(--foreground);
+        }
+        .grant-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .grant-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--foreground);
+            margin-bottom: 4px;
+        }
+        .grant-subtitle {
+            font-size: 14px;
+            color: var(--muted-foreground);
+            font-weight: 400;
+        }
+        .grant-details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 20px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+        }
+        .grant-detail-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .grant-detail-label {
+            font-size: 12px;
+            color: var(--muted-foreground);
+            font-weight: 500;
+        }
+        .grant-detail-value {
+            font-size: 14px;
+            color: var(--foreground);
+            font-weight: 500;
+        }
+        
+        /* Request Cards */
+        .request-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 12px;
+            border: 1px solid var(--border);
+            transition: border-color 0.2s ease;
+        }
+        .request-card:hover {
+            border-color: var(--accent);
+        }
+        .request-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .request-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--card);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .request-icon svg {
+            width: 20px;
+            height: 20px;
+            color: var(--foreground);
+        }
+        .request-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .request-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--foreground);
+            margin-bottom: 6px;
+        }
+        .request-meta {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: var(--muted-foreground);
+            font-weight: 400;
+        }
+        .request-meta svg {
+            width: 14px;
+            height: 14px;
+            color: var(--muted-foreground);
+        }
+        .rejection-notice {
+            padding: 12px;
+            background: var(--card);
+            border-radius: 6px;
+            margin-bottom: 16px;
+        }
+        .rejection-notice-label {
+            font-size: 12px;
+            color: var(--muted-foreground);
+            font-weight: 500;
+            margin-bottom: 6px;
+        }
+        .rejection-notice-text {
+            font-size: 14px;
+            color: var(--foreground);
+            font-weight: 400;
+            line-height: 1.5;
+        }
+        .request-items {
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+        }
+        .request-items-label {
+            font-size: 12px;
+            color: var(--muted-foreground);
+            margin-bottom: 12px;
+            font-weight: 500;
+        }
+        .request-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            background: var(--card);
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+        .request-item-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .request-item-system {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--foreground);
+            margin-bottom: 2px;
+        }
+        .request-item-details {
+            font-size: 13px;
+            color: var(--muted-foreground);
+            font-weight: 400;
+        }
     </style>
 </head>
 <body>
@@ -473,26 +779,41 @@
                 </button>
             </div>
 
-            <nav class="nav">
-                <button class="nav-item active" onclick="switchView('users')">
+            <nav class="nav" id="main-nav">
+                <!-- Regular users see "My Access" -->
+                <button class="nav-item active" id="nav-my-access" onclick="switchView('my-access')" style="display: none;">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                    </svg>
+                    <span>My Access</span>
+                </button>
+                <!-- System owners see full navigation -->
+                <button class="nav-item active" id="nav-users" onclick="switchView('users')" style="display: none;">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
                     </svg>
                     <span>Users</span>
                 </button>
-                <button class="nav-item" onclick="switchView('overview')">
+                <button class="nav-item" id="nav-requests" onclick="switchView('requests')" style="display: none; position: relative;">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    <span>Access Requests</span>
+                    <span id="requests-badge" style="display: none; position: absolute; top: 8px; right: 8px; background: var(--destructive); color: white; border-radius: 10px; padding: 2px 6px; font-size: 10px; font-weight: 600; min-width: 18px; text-align: center;">0</span>
+                </button>
+                <button class="nav-item" id="nav-overview" onclick="switchView('overview')" style="display: none;">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
                     </svg>
                     <span>Access Overview</span>
                 </button>
-                <button class="nav-item" onclick="switchView('log')">
+                <button class="nav-item" id="nav-log" onclick="switchView('log')" style="display: none;">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                     </svg>
                     <span>Log Access</span>
                 </button>
-                <button class="nav-item" onclick="switchView('audit')">
+                <button class="nav-item" id="nav-audit" onclick="switchView('audit')" style="display: none;">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                     </svg>
@@ -539,7 +860,7 @@
         let sidebarOpen = true;
 
         // Check authentication
-        window.addEventListener('DOMContentLoaded', () => {
+        window.addEventListener('DOMContentLoaded', async () => {
             const token = localStorage.getItem('authToken');
             const userStr = localStorage.getItem('currentUser');
             
@@ -552,7 +873,41 @@
             document.getElementById('user-name').textContent = currentUser.name || currentUser.email;
             document.getElementById('user-role').textContent = currentUser.role || 'user';
             
-            loadView('users');
+            // If user ID is missing, fetch it from auth/me
+            if (!currentUser.id) {
+                try {
+                    const meResp = await fetch(`${API_BASE}/api/v1/auth/me`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    const meData = await meResp.json();
+                    currentUser.id = meData.id;
+                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                } catch (error) {
+                    console.error('Failed to fetch user ID:', error);
+                }
+            }
+            
+            // Show/hide nav items based on role
+            const isOwner = currentUser.role === 'owner' || currentUser.role === 'admin';
+            if (isOwner) {
+                document.getElementById('nav-users').style.display = 'flex';
+                document.getElementById('nav-requests').style.display = 'flex';
+                document.getElementById('nav-overview').style.display = 'flex';
+                document.getElementById('nav-log').style.display = 'flex';
+                document.getElementById('nav-audit').style.display = 'flex';
+                document.getElementById('nav-my-access').style.display = 'none';
+                loadView('users');
+                // Update request badge for owners
+                updateRequestsBadge();
+            } else {
+                document.getElementById('nav-users').style.display = 'none';
+                document.getElementById('nav-requests').style.display = 'none';
+                document.getElementById('nav-overview').style.display = 'none';
+                document.getElementById('nav-log').style.display = 'none';
+                document.getElementById('nav-audit').style.display = 'none';
+                document.getElementById('nav-my-access').style.display = 'flex';
+                loadView('my-access');
+            }
         });
 
         function toggleSidebar() {
@@ -573,23 +928,24 @@
             currentView = view;
             
             // Update nav items
-            document.querySelectorAll('.nav-item').forEach((item, index) => {
+            document.querySelectorAll('.nav-item').forEach((item) => {
                 item.classList.remove('active');
-                const views = ['users', 'overview', 'log', 'audit'];
-                if (views[index] === view) {
+                if (item.getAttribute('onclick')?.includes(`'${view}'`)) {
                     item.classList.add('active');
                 }
             });
             
             // Update header
             const titles = {
+                'my-access': { title: 'My Access', desc: 'View your access grants and request new access' },
                 users: { title: 'Users & Access', desc: 'Manage users and their system access' },
+                requests: { title: 'Access Requests', desc: 'Review and approve/deny access requests' },
                 overview: { title: 'Access Overview', desc: 'View and manage all access grants' },
                 log: { title: 'Log Access Grant', desc: 'Record a new access grant' },
                 audit: { title: 'Audit Log', desc: 'Track all access changes' }
             };
-            document.getElementById('page-title').textContent = titles[view].title;
-            document.getElementById('page-description').textContent = titles[view].desc;
+            document.getElementById('page-title').textContent = titles[view]?.title || view;
+            document.getElementById('page-description').textContent = titles[view]?.desc || '';
             
             loadView(view);
         }
@@ -597,8 +953,12 @@
         async function loadView(view) {
             const container = document.getElementById('view-container');
             
-            if (view === 'users') {
+            if (view === 'my-access') {
+                container.innerHTML = await loadMyAccessView();
+            } else if (view === 'users') {
                 container.innerHTML = await loadUsersView();
+            } else if (view === 'requests') {
+                container.innerHTML = await loadRequestsView();
             } else if (view === 'overview') {
                 container.innerHTML = await loadAccessOverviewView();
                 // Initialize overview data after HTML is rendered
@@ -622,6 +982,649 @@
         let auditLog = [];
         let systems = []; // Store filtered systems globally for bulk upload
         let expandedUsers = {};
+        let myGrants = [];
+        let myRequests = [];
+
+        async function loadMyAccessView() {
+            const container = document.getElementById('view-container');
+            container.innerHTML = '<div class="card"><p>Loading your access...</p></div>';
+            
+            try {
+                const token = localStorage.getItem('authToken');
+                const headers = {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                };
+
+                // Load user's grants
+                const grantsResp = await fetch(`${API_BASE}/api/v1/users/me/grants`, { headers });
+                const grantsData = await grantsResp.json();
+                myGrants = grantsData.data || [];
+
+                // Load user's requests
+                const requestsResp = await fetch(`${API_BASE}/api/v1/users/me/requests`, { headers });
+                const requestsData = await requestsResp.json();
+                myRequests = requestsData.data || [];
+
+                // Load systems for request form
+                const systemsResp = await fetch(`${API_BASE}/api/v1/systems`);
+                const systemsData = await systemsResp.json();
+                systems = systemsData.data || systemsData || [];
+
+                return renderMyAccessView();
+            } catch (error) {
+                console.error('Error loading my access:', error);
+                return `<div class="card">Error loading your access: ${error.message}</div>`;
+            }
+        }
+
+        function renderMyAccessView() {
+            return `
+                <div>
+                    <!-- Header Section -->
+                    <div class="access-header">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h1>My Access</h1>
+                                <p>Manage your access grants and request new permissions</p>
+                            </div>
+                            <button class="btn btn-primary" onclick="showRequestAccessForm()">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right: 6px;">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                </svg>
+                                Request Access
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Access Grants Section -->
+                    <div style="margin-bottom: 48px;">
+                        <div class="section-header">
+                            <div class="section-header-icon">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                                </svg>
+                            </div>
+                            <div class="section-header-text">
+                                <h2>Current Access</h2>
+                                <p>Your active system access permissions</p>
+                            </div>
+                            <span class="section-count">${myGrants.length}</span>
+                        </div>
+                        <div id="my-grants-list">
+                            ${renderMyGrantsList()}
+                        </div>
+                    </div>
+
+                    <!-- Access Requests Section -->
+                    <div>
+                        <div class="section-header">
+                            <div class="section-header-icon">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                            </div>
+                            <div class="section-header-text">
+                                <h2>Access Requests</h2>
+                                <p>Track your access request status</p>
+                            </div>
+                            <span class="section-count">${myRequests.length}</span>
+                        </div>
+                        <div id="my-requests-list">
+                            ${renderMyRequestsList()}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderMyGrantsList() {
+            if (myGrants.length === 0) {
+                return `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                            </svg>
+                        </div>
+                        <p class="empty-state-title">No Access Grants</p>
+                        <p class="empty-state-text">You don't have any active access grants. Request access to get started.</p>
+                    </div>
+                `;
+            }
+
+            return myGrants.map(grant => {
+                const systemName = grant.systemInstance?.system?.name || 'Unknown System';
+                const instanceName = grant.systemInstance?.name || 'Unknown Instance';
+                const tierName = grant.accessTier?.name || 'Unknown Tier';
+                const grantedByName = grant.grantedBy?.name || grant.grantedBy?.email || 'Unknown';
+                const grantedAt = grant.grantedAt ? new Date(grant.grantedAt) : null;
+                const grantedAtFormatted = grantedAt ? grantedAt.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : 'Unknown date';
+                const statusBadge = grant.status === 'active' 
+                    ? '<span class="badge badge-success">Active</span>' 
+                    : grant.status === 'to_remove' 
+                    ? '<span class="badge badge-warning">To Remove</span>'
+                    : '<span class="badge badge-error">Removed</span>';
+
+                return `
+                    <div class="grant-card">
+                        <div class="grant-header">
+                            <div class="grant-icon">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                                </svg>
+                            </div>
+                            <div class="grant-info">
+                                <div class="grant-title">${systemName}</div>
+                                <div class="grant-subtitle">${instanceName}</div>
+                            </div>
+                            ${statusBadge}
+                        </div>
+                        
+                        <div class="grant-details-grid">
+                            <div class="grant-detail-item">
+                                <div class="grant-detail-label">Access Tier</div>
+                                <div class="grant-detail-value">${tierName}</div>
+                            </div>
+                            <div class="grant-detail-item">
+                                <div class="grant-detail-label">Granted By</div>
+                                <div class="grant-detail-value">${grantedByName}</div>
+                            </div>
+                            <div class="grant-detail-item">
+                                <div class="grant-detail-label">Granted On</div>
+                                <div class="grant-detail-value">${grantedAtFormatted}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderMyRequestsList() {
+            if (myRequests.length === 0) {
+                return `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                        </div>
+                        <p class="empty-state-title">No Access Requests</p>
+                        <p class="empty-state-text">Your access requests will appear here once submitted.</p>
+                    </div>
+                `;
+            }
+
+            return myRequests.map(request => {
+                const isRequester = request.requesterId === currentUser.id;
+                const targetUserName = request.targetUser?.name || request.targetUser?.email || 'Unknown';
+                const requesterName = request.requester?.name || request.requester?.email || 'Unknown';
+                const createdAt = request.createdAt ? new Date(request.createdAt) : null;
+                const createdAtFormatted = createdAt ? createdAt.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : 'Unknown date';
+
+                const itemsHtml = request.items?.map(item => {
+                    const systemName = item.systemInstance?.system?.name || 'Unknown System';
+                    const instanceName = item.systemInstance?.name || 'Unknown Instance';
+                    const tierName = item.accessTier?.name || 'Unknown Tier';
+                    let itemStatusBadge = '';
+                    if (item.status === 'approved') {
+                        itemStatusBadge = '<span class="badge badge-success" style="font-size: 11px; padding: 3px 8px;">Approved</span>';
+                    } else if (item.status === 'rejected') {
+                        itemStatusBadge = '<span class="badge badge-error" style="font-size: 11px; padding: 3px 8px;">Rejected</span>';
+                    } else {
+                        itemStatusBadge = '<span class="badge badge-warning" style="font-size: 11px; padding: 3px 8px;">Pending</span>';
+                    }
+                    
+                    return `
+                        <div class="request-item">
+                            <div class="request-item-info">
+                                <div class="request-item-system">${systemName}</div>
+                                <div class="request-item-details">${instanceName} • ${tierName}</div>
+                            </div>
+                            ${itemStatusBadge}
+                        </div>
+                    `;
+                }).join('') || '';
+
+                const requestNote = request.note || '';
+                return `
+                    <div class="request-card">
+                        <div class="request-header">
+                            <div class="request-icon">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                            </div>
+                            <div class="request-info">
+                                <div class="request-title">
+                                    ${isRequester ? `Request for ${targetUserName}` : `Request from ${requesterName}`}
+                                </div>
+                                <div class="request-meta">
+                                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                    </svg>
+                                    Submitted on ${createdAtFormatted}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        ${request.status === 'rejected' && requestNote ? `
+                            <div class="rejection-notice">
+                                <div class="rejection-notice-label">Rejection Reason</div>
+                                <div class="rejection-notice-text">${requestNote}</div>
+                            </div>
+                        ` : ''}
+                        
+                        <div class="request-items">
+                            <div class="request-items-label">Requested Access</div>
+                            ${itemsHtml}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function showRequestAccessForm() {
+            try {
+                // Load systems, instances, and tiers for the form
+                const systemsResp = await fetch(`${API_BASE}/api/v1/systems`);
+                if (!systemsResp.ok) {
+                    throw new Error(`Failed to load systems: ${systemsResp.statusText}`);
+                }
+                const systemsData = await systemsResp.json();
+                // Handle both array response and {data: [...]} response
+                const allSystems = Array.isArray(systemsData) ? systemsData : (systemsData.data || []);
+
+                console.log('Loaded systems:', allSystems.length, allSystems);
+
+                if (allSystems.length === 0) {
+                    alert('No systems available. Please contact an administrator.');
+                    return;
+                }
+
+                // Create modal for request form
+                const modal = document.createElement('div');
+                modal.className = 'modal';
+                modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center;';
+                modal.innerHTML = `
+                    <div class="modal-content" style="background: var(--card); border-radius: 8px; padding: 24px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                            <h2 style="font-size: 20px; font-weight: 600;">Request Access</h2>
+                            <button onclick="this.closest('.modal').remove()" style="background: none; border: none; font-size: 24px; cursor: pointer;">&times;</button>
+                        </div>
+                        <form id="request-access-form" onsubmit="handleRequestAccess(event)">
+                            <div style="margin-bottom: 16px;">
+                                <label style="display: block; margin-bottom: 8px; font-weight: 500;">System</label>
+                                <select id="request-system" class="input" required onchange="handleRequestSystemChange()">
+                                    <option value="">Select a system</option>
+                                    ${allSystems.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div style="margin-bottom: 16px;">
+                                <label style="display: block; margin-bottom: 8px; font-weight: 500;">Instance</label>
+                                <select id="request-instance" class="input" required disabled>
+                                    <option value="">Select a system first</option>
+                                </select>
+                            </div>
+                            <div style="margin-bottom: 16px;">
+                                <label style="display: block; margin-bottom: 8px; font-weight: 500;">Access Tier</label>
+                                <select id="request-tier" class="input" required disabled>
+                                    <option value="">Select an instance first</option>
+                                </select>
+                            </div>
+                            <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                                <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancel</button>
+                                <button type="submit" class="btn btn-primary">Request Access</button>
+                            </div>
+                        </form>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+            } catch (error) {
+                console.error('Error loading request form:', error);
+                alert(`Error loading request form: ${error.message}. Please check the browser console for details.`);
+            }
+        }
+
+        async function handleRequestSystemChange() {
+            const systemId = document.getElementById('request-system').value;
+            const instanceSelect = document.getElementById('request-instance');
+            const tierSelect = document.getElementById('request-tier');
+
+            if (!systemId) {
+                instanceSelect.disabled = true;
+                tierSelect.disabled = true;
+                instanceSelect.innerHTML = '<option value="">Select a system first</option>';
+                tierSelect.innerHTML = '<option value="">Select an instance first</option>';
+                return;
+            }
+
+            try {
+                // Load instances
+                const instancesResp = await fetch(`${API_BASE}/api/v1/systems/${systemId}/instances`);
+                if (!instancesResp.ok) {
+                    throw new Error(`Failed to load instances: ${instancesResp.statusText}`);
+                }
+                const instancesData = await instancesResp.json();
+                const instances = instancesData.data || instancesData || [];
+
+                instanceSelect.disabled = false;
+                if (instances.length === 0) {
+                    instanceSelect.innerHTML = '<option value="">No instances available</option>';
+                } else {
+                    instanceSelect.innerHTML = '<option value="">Select an instance</option>' +
+                        instances.map(i => `<option value="${i.id}">${i.name}</option>`).join('');
+                }
+
+                tierSelect.disabled = true;
+                tierSelect.innerHTML = '<option value="">Select an instance first</option>';
+
+            // Load tiers
+            const tiersResp = await fetch(`${API_BASE}/api/v1/systems/${systemId}/access-tiers`);
+            if (!tiersResp.ok) {
+                throw new Error(`Failed to load tiers: ${tiersResp.statusText}`);
+            }
+                const tiersData = await tiersResp.json();
+                const tiers = tiersData.data || tiersData || [];
+
+                // Store tiers for when instance is selected
+                instanceSelect.dataset.tiers = JSON.stringify(tiers);
+                instanceSelect.onchange = function() {
+                    const instanceId = this.value;
+                    const tiers = JSON.parse(this.dataset.tiers || '[]');
+                    tierSelect.disabled = !instanceId;
+                    if (instanceId) {
+                        if (tiers.length === 0) {
+                            tierSelect.innerHTML = '<option value="">No tiers available</option>';
+                        } else {
+                            tierSelect.innerHTML = '<option value="">Select a tier</option>' +
+                                tiers.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+                        }
+                    } else {
+                        tierSelect.innerHTML = '<option value="">Select an instance first</option>';
+                    }
+                };
+            } catch (error) {
+                console.error('Error loading system data:', error);
+                alert(`Error loading system data: ${error.message}`);
+            }
+        }
+
+        async function handleRequestAccess(event) {
+            event.preventDefault();
+            const form = event.target;
+            const instanceId = document.getElementById('request-instance').value;
+            const tierId = document.getElementById('request-tier').value;
+
+            if (!instanceId || !tierId) {
+                alert('Please select both instance and access tier');
+                return;
+            }
+
+            // Validate UUIDs
+            const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+            if (!uuidRegex.test(instanceId) || !uuidRegex.test(tierId)) {
+                alert('Invalid selection. Please try selecting again.');
+                return;
+            }
+
+            const token = localStorage.getItem('authToken');
+            const headers = {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            };
+
+            try {
+                // Get current user ID from stored user or fetch it
+                let userId = currentUser?.id;
+                if (!userId) {
+                    const meResp = await fetch(`${API_BASE}/api/v1/auth/me`, { headers });
+                    const meData = await meResp.json();
+                    userId = meData.id;
+                    if (userId) {
+                        currentUser.id = userId;
+                        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    }
+                }
+
+                if (!userId) {
+                    throw new Error('User ID not found. Please log in again.');
+                }
+
+                const response = await fetch(`${API_BASE}/api/v1/access-requests`, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify({
+                        targetUserId: userId,
+                        items: [{
+                            systemInstanceId: instanceId,
+                            accessTierId: tierId
+                        }]
+                    })
+                });
+
+                if (!response.ok) {
+                    let errorMessage = 'Failed to create access request';
+                    try {
+                        const error = await response.json();
+                        errorMessage = error.message || error.error || JSON.stringify(error);
+                    } catch (e) {
+                        errorMessage = `Server error: ${response.status} ${response.statusText}`;
+                    }
+                    throw new Error(errorMessage);
+                }
+
+                // Close modal and reload view
+                form.closest('.modal').remove();
+                const container = document.getElementById('view-container');
+                container.innerHTML = await loadMyAccessView();
+                
+                // Update request badge for owners (if Gerald's request triggers notification)
+                if (currentUser?.role === 'owner' || currentUser?.role === 'admin') {
+                    updateRequestsBadge();
+                }
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+                console.error('Request access error:', error);
+            }
+        }
+
+        async function loadRequestsView() {
+            const container = document.getElementById('view-container');
+            container.innerHTML = '<div class="card"><p>Loading access requests...</p></div>';
+            
+            try {
+                const token = localStorage.getItem('authToken');
+                const headers = {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                };
+
+                const requestsResp = await fetch(`${API_BASE}/api/v1/access-requests?status=requested`, { headers });
+                if (!requestsResp.ok) {
+                    const errorData = await requestsResp.json().catch(() => ({}));
+                    throw new Error(errorData.message || `Failed to load requests: ${requestsResp.statusText}`);
+                }
+                const requestsData = await requestsResp.json();
+                const pendingRequests = requestsData.data || [];
+
+                // Update badge count
+                const badge = document.getElementById('requests-badge');
+                if (badge) {
+                    if (pendingRequests.length > 0) {
+                        badge.textContent = pendingRequests.length.toString();
+                        badge.style.display = 'block';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                }
+
+                return renderRequestsView(pendingRequests);
+            } catch (error) {
+                console.error('Error loading requests:', error);
+                return `<div class="card">Error loading requests: ${error.message}</div>`;
+            }
+        }
+
+        // Update request badge count on page load for owners
+        async function updateRequestsBadge() {
+            const isOwner = currentUser?.role === 'owner' || currentUser?.role === 'admin';
+            if (!isOwner) return;
+
+            try {
+                const token = localStorage.getItem('authToken');
+                const headers = {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                };
+
+                const requestsResp = await fetch(`${API_BASE}/api/v1/access-requests?status=requested`, { headers });
+                if (requestsResp.ok) {
+                    const requestsData = await requestsResp.json();
+                    const pendingRequests = requestsData.data || [];
+                    const badge = document.getElementById('requests-badge');
+                    if (badge) {
+                        if (pendingRequests.length > 0) {
+                            badge.textContent = pendingRequests.length.toString();
+                            badge.style.display = 'block';
+                        } else {
+                            badge.style.display = 'none';
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error updating requests badge:', error);
+            }
+        }
+
+        function renderRequestsView(requests) {
+            if (requests.length === 0) {
+                return '<div class="card"><p style="text-align: center; color: var(--muted-foreground); padding: 24px;">No pending access requests.</p></div>';
+            }
+
+            return requests.map(request => {
+                const targetUserName = request.targetUser?.name || request.targetUser?.email || 'Unknown';
+                const requesterName = request.requester?.name || request.requester?.email || 'Unknown';
+                const createdAt = request.createdAt ? new Date(request.createdAt).toLocaleDateString() : 'Unknown date';
+                
+                const itemsHtml = request.items?.map(item => {
+                    const systemName = item.systemInstance?.system?.name || 'Unknown System';
+                    const instanceName = item.systemInstance?.name || 'Unknown Instance';
+                    const tierName = item.accessTier?.name || 'Unknown Tier';
+                    const itemStatus = item.status === 'approved' ? '<span class="badge badge-success" style="font-size: 11px;">Approved</span>' :
+                                     item.status === 'rejected' ? '<span class="badge badge-error" style="font-size: 11px;">Rejected</span>' :
+                                     '<span class="badge badge-warning" style="font-size: 11px;">Pending</span>';
+                    return `
+                        <div style="padding: 12px; background: var(--card); border-radius: 4px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <strong>${systemName}</strong> - ${instanceName} (${tierName}) ${itemStatus}
+                            </div>
+                            ${item.status === 'requested' ? `
+                                <div style="display: flex; gap: 8px;">
+                                    <button class="btn btn-primary" style="padding: 6px 12px; font-size: 12px;" onclick="approveRequestItem('${request.id}', '${item.id}')">
+                                        Approve
+                                    </button>
+                                    <button class="btn btn-destructive" style="padding: 6px 12px; font-size: 12px;" onclick="rejectRequestItem('${request.id}', '${item.id}')">
+                                        Reject
+                                    </button>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                }).join('') || '';
+
+                return `
+                    <div class="card" style="margin-bottom: 16px;">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
+                            <div style="flex: 1;">
+                                <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">
+                                    Request from ${requesterName} for ${targetUserName}
+                                </h3>
+                                <p style="color: var(--muted-foreground); font-size: 14px;">
+                                    Created: ${createdAt}
+                                </p>
+                            </div>
+                        </div>
+                        <div style="margin-top: 12px;">
+                            <strong style="font-size: 14px; display: block; margin-bottom: 8px;">Requested Access:</strong>
+                            ${itemsHtml}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function approveRequestItem(requestId, itemId) {
+            const token = localStorage.getItem('authToken');
+            const headers = {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/access-requests/${requestId}/items/${itemId}/approve`, {
+                    method: 'PATCH',
+                    headers
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Failed to approve request');
+                }
+
+                // Reload requests view
+                const container = document.getElementById('view-container');
+                container.innerHTML = await loadRequestsView();
+                
+                // Update audit log if currently viewing it
+                if (currentView === 'audit') {
+                    container.innerHTML = await loadAuditView();
+                }
+                
+                // Update requests badge
+                updateRequestsBadge();
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+            }
+        }
+
+        async function rejectRequestItem(requestId, itemId) {
+            const note = prompt('Enter rejection reason (optional):');
+            if (note === null) return; // User cancelled
+
+            const token = localStorage.getItem('authToken');
+            const headers = {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}/api/v1/access-requests/${requestId}/items/${itemId}/reject`, {
+                    method: 'PATCH',
+                    headers,
+                    body: JSON.stringify({ note: note || undefined })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Failed to reject request');
+                }
+
+                // Reload requests view
+                const container = document.getElementById('view-container');
+                container.innerHTML = await loadRequestsView();
+                
+                // Update audit log if currently viewing it (rejections don't create grants, but refresh anyway)
+                if (currentView === 'audit') {
+                    container.innerHTML = await loadAuditView();
+                }
+                
+                // Update requests badge
+                updateRequestsBadge();
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+            }
+        }
 
         async function loadUsersView() {
             const container = document.getElementById('view-container');
@@ -1025,30 +2028,97 @@
         }
 
         async function loadAuditView() {
-            return `
-                <div>
-                    <h2 style="font-size: 20px; font-weight: 600; margin-bottom: 8px;">Audit Log</h2>
-                    <p style="font-size: 14px; color: var(--muted-foreground); margin-bottom: 24px;">
-                        Track all access grant changes in your system.
-                    </p>
-                    <div id="audit-list">
-                        ${auditLog.length === 0 ? '<p style="text-align: center; padding: 48px; color: var(--muted-foreground);">No audit log entries yet.</p>' : auditLog.map(entry => `
-                            <div class="audit-entry ${entry.action}">
-                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-                                    <span class="audit-badge ${entry.action}">${entry.action.toUpperCase()}</span>
-                                    <span style="font-weight: 600; color: var(--foreground);">${entry.actor}</span>
+            // Load grants from backend to show all access changes
+            try {
+                const token = localStorage.getItem('authToken');
+                const headers = {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                };
+
+                // Load all grants (active and removed) ordered by grantedAt/removedAt
+                const grantsResp = await fetch(`${API_BASE}/api/v1/access-overview?page=1&limit=1000`, { headers });
+                const grantsData = await grantsResp.json();
+                const allGrants = grantsData.data || [];
+
+                // Convert grants to audit entries
+                const grantAuditEntries = [];
+                
+                // Active grants (shows when access was granted)
+                allGrants.filter(g => g.status === 'active' && g.grantedAt).forEach(grant => {
+                    grantAuditEntries.push({
+                        id: `grant-${grant.id}`,
+                        timestamp: new Date(grant.grantedAt),
+                        actor: grant.grantedBy?.name || grant.grantedBy?.email || 'System',
+                        action: 'add',
+                        targetUser: grant.user?.name || grant.user?.email || 'Unknown',
+                        targetSystem: grant.systemInstance?.system?.name || 'Unknown',
+                        targetInstance: grant.systemInstance?.name || 'Unknown',
+                        targetTier: grant.accessTier?.name || 'Unknown',
+                        details: `Granted access: ${grant.systemInstance?.system?.name || 'System'} (${grant.systemInstance?.name || 'Instance'}) - ${grant.accessTier?.name || 'Tier'}`
+                    });
+                });
+
+                // Removed grants (shows when access was removed)
+                allGrants.filter(g => g.status === 'removed' && g.removedAt).forEach(grant => {
+                    grantAuditEntries.push({
+                        id: `remove-${grant.id}`,
+                        timestamp: new Date(grant.removedAt),
+                        actor: grant.grantedBy?.name || grant.grantedBy?.email || 'System',
+                        action: 'remove',
+                        targetUser: grant.user?.name || grant.user?.email || 'Unknown',
+                        targetSystem: grant.systemInstance?.system?.name || 'Unknown',
+                        targetInstance: grant.systemInstance?.name || 'Unknown',
+                        targetTier: grant.accessTier?.name || 'Unknown',
+                        details: `Removed access: ${grant.systemInstance?.system?.name || 'System'} (${grant.systemInstance?.name || 'Instance'}) - ${grant.accessTier?.name || 'Tier'} from ${grant.user?.name || 'User'}`
+                    });
+                });
+
+                // Merge with frontend audit log (for actions that haven't been saved yet)
+                const allAuditEntries = [...grantAuditEntries, ...auditLog];
+                
+                // Sort by timestamp (newest first)
+                allAuditEntries.sort((a, b) => {
+                    const timeA = a.timestamp instanceof Date ? a.timestamp.getTime() : new Date(a.timestamp).getTime();
+                    const timeB = b.timestamp instanceof Date ? b.timestamp.getTime() : new Date(b.timestamp).getTime();
+                    return timeB - timeA;
+                });
+
+                return `
+                    <div>
+                        <h2 style="font-size: 20px; font-weight: 600; margin-bottom: 8px;">Audit Log</h2>
+                        <p style="font-size: 14px; color: var(--muted-foreground); margin-bottom: 24px;">
+                            Track all access grant changes in your system.
+                        </p>
+                        <div id="audit-list">
+                            ${allAuditEntries.length === 0 ? '<p style="text-align: center; padding: 48px; color: var(--muted-foreground);">No audit log entries yet.</p>' : allAuditEntries.map(entry => `
+                                <div class="audit-entry ${entry.action}">
+                                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                                        <span class="audit-badge ${entry.action}">${entry.action.toUpperCase()}</span>
+                                        <span style="font-weight: 600; color: var(--foreground);">${entry.actor}</span>
+                                    </div>
+                                    <p style="font-weight: 500; margin-bottom: 12px; color: var(--foreground);">${entry.details}</p>
+                                    <div style="font-size: 13px; color: var(--muted-foreground); line-height: 1.6;">
+                                        <p><strong style="color: var(--foreground);">User:</strong> ${entry.targetUser}</p>
+                                        ${entry.targetSystem ? `<p><strong style="color: var(--foreground);">System:</strong> ${entry.targetSystem}${entry.targetInstance ? ` • ${entry.targetInstance}` : ''}${entry.targetTier ? ` • ${entry.targetTier}` : ''}</p>` : ''}
+                                        <p><strong style="color: var(--foreground);">Time:</strong> ${(entry.timestamp instanceof Date ? entry.timestamp : new Date(entry.timestamp)).toLocaleString()}</p>
+                                    </div>
                                 </div>
-                                <p style="font-weight: 500; margin-bottom: 12px; color: var(--foreground);">${entry.details}</p>
-                                <div style="font-size: 13px; color: var(--muted-foreground); line-height: 1.6;">
-                                    <p><strong style="color: var(--foreground);">User:</strong> ${entry.targetUser}</p>
-                                    ${entry.targetSystem ? `<p><strong style="color: var(--foreground);">System:</strong> ${entry.targetSystem}${entry.targetInstance ? ` • ${entry.targetInstance}` : ''}${entry.targetTier ? ` • ${entry.targetTier}` : ''}</p>` : ''}
-                                    <p><strong style="color: var(--foreground);">Time:</strong> ${new Date(entry.timestamp).toLocaleString()}</p>
-                                </div>
-                            </div>
-                        `).join('')}
+                            `).join('')}
+                        </div>
                     </div>
-                </div>
-            `;
+                `;
+            } catch (error) {
+                console.error('Error loading audit log:', error);
+                return `
+                    <div>
+                        <h2 style="font-size: 20px; font-weight: 600; margin-bottom: 8px;">Audit Log</h2>
+                        <div class="card">
+                            <p style="color: var(--destructive);">Error loading audit log: ${error.message}</p>
+                        </div>
+                    </div>
+                `;
+            }
         }
 
         async function handleLogAccess(event) {
