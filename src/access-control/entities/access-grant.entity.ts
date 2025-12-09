@@ -15,6 +15,7 @@ import { AccessTier } from '../../systems/entities/access-tier.entity';
 export enum AccessGrantStatus {
   ACTIVE = 'active',
   REMOVED = 'removed',
+  TO_REMOVE = 'to_remove',
 }
 
 @Entity('access_grants')

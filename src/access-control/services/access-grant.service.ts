@@ -146,6 +146,9 @@ export class AccessGrantService {
       grant.removedAt = new Date();
     } else if (status === AccessGrantStatus.ACTIVE) {
       grant.removedAt = null;
+    } else if (status === AccessGrantStatus.TO_REMOVE) {
+      // Do not mark removed, but ensure removedAt is cleared
+      grant.removedAt = null;
     }
 
     // Save updated grant

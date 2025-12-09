@@ -312,6 +312,28 @@ describe('Access Overview (Integration)', () => {
         expect(result.data[0].status).toBe(AccessGrantStatus.ACTIVE);
       });
 
+      it('should filter by to_remove status', async () => {
+        await accessGrantRepository.save({
+          userId: testUser1.id,
+          systemInstanceId: testInstance1.id,
+          accessTierId: testTier1.id,
+          status: AccessGrantStatus.TO_REMOVE,
+        });
+        await accessGrantRepository.save({
+          userId: testUser1.id,
+          systemInstanceId: testInstance1.id,
+          accessTierId: testTier1.id,
+          status: AccessGrantStatus.ACTIVE,
+        });
+
+        const result = await queryService.findAll({
+          status: AccessGrantStatus.TO_REMOVE,
+        });
+
+        expect(result.data.length).toBe(1);
+        expect(result.data[0].status).toBe(AccessGrantStatus.TO_REMOVE);
+      });
+
       it('should combine multiple filters', async () => {
         await accessGrantRepository.save({
           userId: testUser1.id,

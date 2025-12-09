@@ -9,6 +9,11 @@ import {
   AccessGrant,
   AccessGrantStatus,
 } from '../../src/access-control/entities/access-grant.entity';
+import { SystemOwner } from '../../src/ownership/entities/system-owner.entity';
+import { SystemOwnerService } from '../../src/ownership/services/system-owner.service';
+import { OwnershipModule } from '../../src/ownership/ownership.module';
+import { CsvParserService } from '../../src/access-control/services/csv-parser.service';
+import { AuthModule } from '../../src/auth/auth.module';
 import { AccessGrantService } from '../../src/access-control/services/access-grant.service';
 import { AccessGrantsController } from '../../src/access-control/controllers/access-grants.controller';
 
@@ -37,14 +42,16 @@ describe('Access Grant Status Management (Integration)', () => {
           username: process.env.DB_USERNAME || 'postgres',
           password: process.env.DB_PASSWORD || 'postgres',
           database: process.env.DB_DATABASE || 'bootcamp_access',
-          entities: [User, System, SystemInstance, AccessTier, AccessGrant],
+          entities: [User, System, SystemInstance, AccessTier, AccessGrant, SystemOwner],
           synchronize: true,
           logging: false,
         }),
-        TypeOrmModule.forFeature([User, System, SystemInstance, AccessTier, AccessGrant]),
+        TypeOrmModule.forFeature([User, System, SystemInstance, AccessTier, AccessGrant, SystemOwner]),
+        OwnershipModule,
+        AuthModule,
       ],
       controllers: [AccessGrantsController],
-      providers: [AccessGrantService],
+      providers: [AccessGrantService, CsvParserService, SystemOwnerService],
     }).compile();
 
     accessGrantService = module.get<AccessGrantService>(AccessGrantService);
@@ -153,6 +160,21 @@ describe('Access Grant Status Management (Integration)', () => {
         expect(updated.removedAt).not.toBeNull();
       });
 
+      it('should update status to TO_REMOVE and keep removedAt null', async () => {
+        const grant = await accessGrantService.create({
+          userId: testUser.id,
+          systemInstanceId: testInstance.id,
+          accessTierId: testTier.id,
+        });
+
+        const updated = await accessGrantService.updateStatus(grant.id, {
+          status: AccessGrantStatus.TO_REMOVE,
+        });
+
+        expect(updated.status).toBe(AccessGrantStatus.TO_REMOVE);
+        expect(updated.removedAt).toBeNull();
+      });
+
       it('should update status from removed to active', async () => {
         // Create removed grant
         const grant = await accessGrantService.create({
@@ -256,6 +278,21 @@ describe('Access Grant Status Management (Integration)', () => {
 
       expect(updated.status).toBe(AccessGrantStatus.REMOVED);
       expect(updated.removedAt).not.toBeNull();
+    });
+
+    it('should allow setting status to TO_REMOVE without setting removedAt', async () => {
+      const grant = await controller.create({
+        userId: testUser.id,
+        systemInstanceId: testInstance.id,
+        accessTierId: testTier.id,
+      });
+
+      const updated = await controller.updateStatus(grant.id, {
+        status: AccessGrantStatus.TO_REMOVE,
+      });
+
+      expect(updated.status).toBe(AccessGrantStatus.TO_REMOVE);
+      expect(updated.removedAt).toBeNull();
     });
   });
 });

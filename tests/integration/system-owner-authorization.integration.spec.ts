@@ -239,6 +239,14 @@ describe('System Owner Authorization (Integration)', () => {
         .send({ status: 'removed' })
         .expect(403);
     });
+
+    it('should allow system owner to mark grant to_remove', async () => {
+      await request(app.getHttpServer())
+        .patch(`/api/v1/access-grants/${testGrant.id}/status`)
+        .set('Authorization', `Bearer ${ownerToken}`)
+        .send({ status: 'to_remove' })
+        .expect(200);
+    });
   });
 });
 
