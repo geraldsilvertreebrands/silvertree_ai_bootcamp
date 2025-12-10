@@ -4,6 +4,7 @@ import {
   ConflictException,
   UnprocessableEntityException,
   ForbiddenException,
+  BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { QueryFailedError, Repository } from 'typeorm';
@@ -436,6 +437,216 @@ export class AccessGrantService {
       .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
       .join(' ');
     return friendly || 'New User';
+  }
+
+  /**
+   * Find a grant by ID or throw NotFoundException
+   */
+  private async findOneOrFail(id: string): Promise<AccessGrant> {
+    const grant = await this.accessGrantRepository.findOne({
+      where: { id },
+      relations: ['systemInstance', 'systemInstance.system'],
+    });
+
+    if (!grant) {
+      throw new NotFoundException(`AccessGrant with ID ${id} not found`);
+    }
+
+    return grant;
+  }
+
+  /**
+   * PHASE2-005: Mark grant for removal
+   * Transitions: active → to_remove
+   */
+  async markToRemove(grantId: string, ownerId: string): Promise<AccessGrant> {
+    const grant = await this.findOneOrFail(grantId);
+
+    // Check authorization: user must be system owner
+    const isOwner = await this.systemOwnerService.isSystemOwner(
+      ownerId,
+      grant.systemInstance.systemId,
+    );
+    if (!isOwner) {
+      throw new ForbiddenException(
+        `You are not authorized to mark grants for removal in system '${grant.systemInstance.system.name}'. You must be a system owner.`,
+      );
+    }
+
+    // Validate status transition
+    if (grant.status !== AccessGrantStatus.ACTIVE) {
+      throw new BadRequestException(
+        `Cannot mark grant for removal. Grant must be in 'active' status, but is '${grant.status}'.`,
+      );
+    }
+
+    grant.status = AccessGrantStatus.TO_REMOVE;
+    grant.removedAt = null; // Clear removedAt when marking for removal
+
+    await this.accessGrantRepository.save(grant);
+
+    // Load all relations for response
+    return this.accessGrantRepository.findOne({
+      where: { id: grantId },
+      relations: ['user', 'systemInstance', 'systemInstance.system', 'accessTier', 'grantedBy'],
+    }) as Promise<AccessGrant>;
+  }
+
+  /**
+   * PHASE2-005: Mark grant as removed
+   * Transitions: to_remove → removed
+   */
+  async markRemoved(grantId: string, ownerId: string): Promise<AccessGrant> {
+    const grant = await this.findOneOrFail(grantId);
+
+    // Check authorization: user must be system owner
+    const isOwner = await this.systemOwnerService.isSystemOwner(
+      ownerId,
+      grant.systemInstance.systemId,
+    );
+    if (!isOwner) {
+      throw new ForbiddenException(
+        `You are not authorized to mark grants as removed in system '${grant.systemInstance.system.name}'. You must be a system owner.`,
+      );
+    }
+
+    // Validate status transition
+    if (grant.status !== AccessGrantStatus.TO_REMOVE) {
+      throw new BadRequestException(
+        `Cannot mark grant as removed. Grant must be in 'to_remove' status, but is '${grant.status}'.`,
+      );
+    }
+
+    grant.status = AccessGrantStatus.REMOVED;
+    grant.removedAt = new Date();
+
+    await this.accessGrantRepository.save(grant);
+
+    // Load all relations for response
+    return this.accessGrantRepository.findOne({
+      where: { id: grantId },
+      relations: ['user', 'systemInstance', 'systemInstance.system', 'accessTier', 'grantedBy'],
+    }) as Promise<AccessGrant>;
+  }
+
+  /**
+   * PHASE2-005: Cancel pending removal
+   * Transitions: to_remove → active
+   */
+  async cancelRemoval(grantId: string, ownerId: string): Promise<AccessGrant> {
+    const grant = await this.findOneOrFail(grantId);
+
+    // Check authorization: user must be system owner
+    const isOwner = await this.systemOwnerService.isSystemOwner(
+      ownerId,
+      grant.systemInstance.systemId,
+    );
+    if (!isOwner) {
+      throw new ForbiddenException(
+        `You are not authorized to cancel removal for grants in system '${grant.systemInstance.system.name}'. You must be a system owner.`,
+      );
+    }
+
+    // Validate status transition
+    if (grant.status !== AccessGrantStatus.TO_REMOVE) {
+      throw new BadRequestException(
+        `Cannot cancel removal. Grant must be in 'to_remove' status, but is '${grant.status}'.`,
+      );
+    }
+
+    grant.status = AccessGrantStatus.ACTIVE;
+    grant.removedAt = null;
+
+    await this.accessGrantRepository.save(grant);
+
+    // Load all relations for response
+    return this.accessGrantRepository.findOne({
+      where: { id: grantId },
+      relations: ['user', 'systemInstance', 'systemInstance.system', 'accessTier', 'grantedBy'],
+    }) as Promise<AccessGrant>;
+  }
+
+  /**
+   * PHASE2-005: Find grants pending removal for systems owned by user
+   */
+  async findPendingRemoval(ownerId: string): Promise<AccessGrant[]> {
+    // Get systems owned by this user
+    const ownedSystems = await this.systemOwnerService.findByUser(ownerId);
+    const systemIds = ownedSystems.map((o) => o.systemId);
+
+    if (systemIds.length === 0) return [];
+
+    return this.accessGrantRepository
+      .createQueryBuilder('grant')
+      .innerJoinAndSelect('grant.user', 'user')
+      .innerJoinAndSelect('grant.systemInstance', 'instance')
+      .innerJoinAndSelect('instance.system', 'system')
+      .innerJoinAndSelect('grant.accessTier', 'tier')
+      .leftJoinAndSelect('grant.grantedBy', 'grantedBy')
+      .where('grant.status = :status', { status: AccessGrantStatus.TO_REMOVE })
+      .andWhere('system.id IN (:...systemIds)', { systemIds })
+      .orderBy('grant.updatedAt', 'ASC')
+      .getMany();
+  }
+
+  /**
+   * PHASE2-005: Bulk mark grants for removal
+   */
+  async bulkMarkToRemove(
+    grantIds: string[],
+    ownerId: string,
+  ): Promise<{
+    successful: AccessGrant[];
+    failed: Array<{ id: string; reason: string }>;
+  }> {
+    const results = {
+      successful: [] as AccessGrant[],
+      failed: [] as Array<{ id: string; reason: string }>,
+    };
+
+    for (const grantId of grantIds) {
+      try {
+        const grant = await this.markToRemove(grantId, ownerId);
+        results.successful.push(grant);
+      } catch (error: any) {
+        results.failed.push({
+          id: grantId,
+          reason: error.message || 'Unknown error',
+        });
+      }
+    }
+
+    return results;
+  }
+
+  /**
+   * PHASE2-005: Bulk mark grants as removed
+   */
+  async bulkMarkRemoved(
+    grantIds: string[],
+    ownerId: string,
+  ): Promise<{
+    successful: AccessGrant[];
+    failed: Array<{ id: string; reason: string }>;
+  }> {
+    const results = {
+      successful: [] as AccessGrant[],
+      failed: [] as Array<{ id: string; reason: string }>,
+    };
+
+    for (const grantId of grantIds) {
+      try {
+        const grant = await this.markRemoved(grantId, ownerId);
+        results.successful.push(grant);
+      } catch (error: any) {
+        results.failed.push({
+          id: grantId,
+          reason: error.message || 'Unknown error',
+        });
+      }
+    }
+
+    return results;
   }
 }
 

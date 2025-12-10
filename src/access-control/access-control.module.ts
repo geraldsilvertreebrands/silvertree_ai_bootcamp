@@ -13,10 +13,12 @@ import { AccessOverviewController } from './controllers/access-overview.controll
 import { AccessGrantsController } from './controllers/access-grants.controller';
 import { AccessRequestsController } from './controllers/access-requests.controller';
 import { SystemOwnerGuard } from '../common/guards/system-owner.guard';
+import { ManagerGuard } from '../common/guards/manager.guard';
 import { SystemOwnerService } from '../ownership/services/system-owner.service';
 import { SystemOwner } from '../ownership/entities/system-owner.entity';
 import { AuthModule } from '../auth/auth.module';
 import { OwnershipModule } from '../ownership/ownership.module';
+import { IntegrationsModule } from '../integrations/integrations.module';
 import { AccessRequestService } from './services/access-request.service';
 
 @Module({
@@ -33,6 +35,7 @@ import { AccessRequestService } from './services/access-request.service';
     ]),
     AuthModule,
     OwnershipModule,
+    IntegrationsModule,
   ],
   controllers: [AccessOverviewController, AccessGrantsController, AccessRequestsController],
   providers: [
@@ -41,6 +44,7 @@ import { AccessRequestService } from './services/access-request.service';
     AccessRequestService,
     CsvParserService,
     SystemOwnerGuard,
+    ManagerGuard,
   ],
   exports: [AccessGrantQueryService, AccessGrantService, AccessRequestService, CsvParserService],
 })

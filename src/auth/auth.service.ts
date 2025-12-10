@@ -34,13 +34,19 @@ export class AuthService {
     // Trim and lowercase email for matching
     const emailLower = loginData.email.trim().toLowerCase();
     
-    const user = await this.userRepository.findOne({
-      where: { email: emailLower },
-    });
+    // Try to find user including soft-deleted ones
+    let user = await this.userRepository
+      .createQueryBuilder('user')
+      .where('LOWER(user.email) = :email', { email: emailLower })
+      .withDeleted() // Include soft-deleted users
+      .getOne();
 
-    // If not found with exact match, try case-insensitive search
+    // If not found, try case-insensitive search
     if (!user) {
-      const users = await this.userRepository.find();
+      const users = await this.userRepository
+        .createQueryBuilder('user')
+        .withDeleted()
+        .getMany();
       const foundUser = users.find(
         (u) => u.email.toLowerCase() === emailLower
       );
@@ -49,7 +55,19 @@ export class AuthService {
         throw new UnauthorizedException('User not found');
       }
       
+      // If user was soft-deleted, restore them
+      if (foundUser.deletedAt) {
+        await this.userRepository.restore(foundUser.id);
+        foundUser.deletedAt = null;
+      }
+      
       return this.createLoginResponse(foundUser);
+    }
+
+    // If user was soft-deleted, restore them
+    if (user.deletedAt) {
+      await this.userRepository.restore(user.id);
+      user.deletedAt = null;
     }
 
     return this.createLoginResponse(user);
@@ -74,12 +92,20 @@ export class AuthService {
     }
 
     const email = Buffer.from(token, 'base64').toString('utf8');
-    const user = await this.userRepository.findOne({
-      where: { email: email.toLowerCase() },
-    });
+    const user = await this.userRepository
+      .createQueryBuilder('user')
+      .where('LOWER(user.email) = :email', { email: email.toLowerCase() })
+      .withDeleted() // Include soft-deleted users
+      .getOne();
 
     if (!user) {
       throw new UnauthorizedException('Invalid token');
+    }
+
+    // If user was soft-deleted, restore them
+    if (user.deletedAt) {
+      await this.userRepository.restore(user.id);
+      user.deletedAt = null;
     }
 
     const role = this.getRoleFromEmail(user.email);

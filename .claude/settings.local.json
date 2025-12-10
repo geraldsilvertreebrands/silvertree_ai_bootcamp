@@ -6,7 +6,32 @@
       "Bash(wc:*)",
       "Bash(grep:*)",
       "Bash(cat:*)",
-      "Bash(npm test:*)"
+      "Bash(npm test:*)",
+      "Bash(tail:*)",
+      "Bash(pkill:*)",
+      "Bash(lsof:*)",
+      "Bash(xargs kill -9)",
+      "Bash(PGPASSWORD=postgres psql:*)",
+      "Bash(curl:*)",
+      "Bash(TOKEN=Z2VyYWxkc0BzaWx2ZXJ0cmVlYnJhbmRzLmNvbQ== USER_ID=69326885-ad67-4481-b7e2-ce41100146d5)",
+      "Bash(echo \"Making access request for Gerald (self-request)...\" curl -s -X POST \"http://localhost:3000/api/v1/access-requests\" -H \"Content-Type: application/json\" -H \"Authorization: Bearer $TOKEN\" -d '{\"\"\"\"targetUserId\"\"\"\": \"\"\"\"'$USER_ID'\"\"\"\", \"\"\"\"items\"\"\"\": [{\"\"\"\"systemInstanceId\"\"\"\": \"\"\"\"f42d9fc2-9c5a-4f78-95ba-3ff13d9e0b89\"\"\"\", \"\"\"\"accessTierId\"\"\"\": \"\"\"\"673e120d-d3d3-4d16-9ba0-51e74f7b1b16\"\"\"\"}], \"\"\"\"note\"\"\"\": \"\"\"\"Testing request flow\"\"\"\"}')",
+      "Bash(TOKEN=\"Z2VyYWxkc0BzaWx2ZXJ0cmVlYnJhbmRzLmNvbQ==\")",
+      "Bash(/opt/homebrew/opt/postgresql@14/bin/psql:*)",
+      "Bash(/opt/homebrew/bin/psql:*)",
+      "Bash(docker exec:*)",
+      "Bash(npm run seed:*)",
+      "Bash(TOKEN=\"c2FkeWFnZXJhbGRtQGdtYWlsLmNvbQ==\" echo \"=== Getting systems for sadyageraldm ===\" curl -s \"http://localhost:3000/api/v1/systems\" -H \"Authorization: Bearer $TOKEN\")",
+      "Bash(python3:*)",
+      "Bash(TOKEN=\"c2FkeWFnZXJhbGRtQGdtYWlsLmNvbQ==\")",
+      "Bash(SYSTEM_ID=\"1c13fe29-dd8b-4609-9693-1034840ef018\")",
+      "Bash(TOKEN=\"c2FkeWFnZXJhbGRtQGdtYWlsLmNvbQ==\" echo \"=== Getting users ===\" curl -s \"http://localhost:3000/api/v1/users\" -H \"Authorization: Bearer $TOKEN\")",
+      "Bash(__NEW_LINE__ GERALD_TOKEN=\"Z2VyYWxkc0BzaWx2ZXJ0cmVlYnJhbmRzLmNvbQ==\")",
+      "Bash(REQUEST_ID=\"6fca6e21-9aa8-42d3-ae9e-b8cd76673c3b\")",
+      "Bash(__NEW_LINE__ curl -s -X PATCH \"http://localhost:3000/api/v1/access-requests/$REQUEST_ID/approve\" )",
+      "Bash(GERALD_TOKEN=\"Z2VyYWxkc0BzaWx2ZXJ0cmVlYnJhbmRzLmNvbQ==\":*)",
+      "Bash(GERALD_TOKEN=\"Z2VyYWxkc0BzaWx2ZXJ0cmVlYnJhbmRzLmNvbQ==\" echo \"=== Pending requests for geralds (manager of sadyageraldm) ===\" curl -s \"http://localhost:3000/api/v1/access-requests/pending\" -H \"Authorization: Bearer $GERALD_TOKEN\")",
+      "Bash(GERALD_TOKEN=\"Z2VyYWxkc0BzaWx2ZXJ0cmVlYnJhbmRzLmNvbQ==\" REQUEST_ID=\"88c1b594-9860-4e5b-8f64-3e1c9d313220\")",
+      "Bash(REQUEST_ID=\"88c1b594-9860-4e5b-8f64-3e1c9d313220\")"
     ]
   }
 }

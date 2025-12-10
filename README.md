@@ -108,6 +108,7 @@ src/
 - [Test Strategy](docs/TEST_STRATEGY.md) - Testing approach
 - [Phases](docs/PHASES.md) - Project phases
 - [Decisions](docs/DECISIONS.md) - Architecture Decision Records
+- [Slack Setup](docs/SLACK_SETUP.md) - Slack integration setup guide
 
 ## Tickets
 

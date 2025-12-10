@@ -8,6 +8,11 @@ import { AccessGrant } from '../../src/access-control/entities/access-grant.enti
 import { System } from '../../src/systems/entities/system.entity';
 import { SystemInstance } from '../../src/systems/entities/system-instance.entity';
 import { AccessTier } from '../../src/systems/entities/access-tier.entity';
+import { SystemOwner } from '../../src/ownership/entities/system-owner.entity';
+import {
+  AccessRequest,
+  AccessRequestItem,
+} from '../../src/access-control/entities/access-request.entity';
 
 describe('Identity Module (Integration)', () => {
   let userService: UserService;
@@ -24,11 +29,20 @@ describe('Identity Module (Integration)', () => {
           username: process.env.DB_USERNAME || 'postgres',
           password: process.env.DB_PASSWORD || 'postgres',
           database: process.env.DB_DATABASE || 'bootcamp_access',
-          entities: [User, AccessGrant, System, SystemInstance, AccessTier],
+          entities: [
+            User,
+            AccessGrant,
+            System,
+            SystemInstance,
+            AccessTier,
+            SystemOwner,
+            AccessRequest,
+            AccessRequestItem,
+          ],
           synchronize: true,
           logging: false,
         }),
-        TypeOrmModule.forFeature([User, AccessGrant]),
+        TypeOrmModule.forFeature([User, AccessGrant, AccessRequest]),
       ],
       controllers: [UsersController],
       providers: [UserService],

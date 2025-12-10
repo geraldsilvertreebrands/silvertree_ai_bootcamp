@@ -138,37 +138,6 @@ export async function seedDatabase(dataSource: DataSource) {
     console.log(`  ✓ Removed ${csvSampleUsers.length} CSV sample user(s)`);
   }
 
-  // Remove all grants for Gerald Sadya (for demo purposes)
-  console.log('Clearing Gerald Sadya access grants...');
-  const geraldUser = await userRepository.findOne({
-    where: { email: 'geralds@silvertreebrands.com' },
-  });
-  if (geraldUser) {
-    // Delete access requests for Gerald
-    try {
-      const { AccessRequest } = await import('../access-control/entities/access-request.entity');
-      const accessRequestRepository = dataSource.getRepository(AccessRequest);
-      await accessRequestRepository
-        .createQueryBuilder()
-        .delete()
-        .where('requesterId = :userId OR targetUserId = :userId', { userId: geraldUser.id })
-        .execute();
-    } catch (error) {
-      // Ignore if table doesn't exist yet
-    }
-
-    // Delete all grants for Gerald
-    await grantRepository
-      .createQueryBuilder()
-      .delete()
-      .where('userId = :userId', { userId: geraldUser.id })
-      .execute();
-    
-    console.log(`  ✓ Cleared all access grants for Gerald Sadya`);
-  } else {
-    console.log(`  - Gerald Sadya not found`);
-  }
-
   // Clean up test systems (keep only real Silvertree systems)
   console.log('Cleaning up test systems...');
   const validSystemNames = seedSystems.map(s => s.name);
@@ -241,16 +210,100 @@ export async function seedDatabase(dataSource: DataSource) {
   console.log('Creating users...');
   const users: User[] = [];
   for (const userData of seedUsers) {
-    const existingUser = await userRepository.findOne({ where: { email: userData.email } });
-    if (!existingUser) {
-      const user = userRepository.create(userData);
-      const savedUser = await userRepository.save(user);
-      users.push(savedUser);
-      console.log(`  ✓ Created user: ${userData.name} (${userData.email})`);
-    } else {
-      users.push(existingUser);
-      console.log(`  - User already exists: ${userData.email}`);
+    try {
+      const existingUser = await userRepository.findOne({ where: { email: userData.email } });
+      if (!existingUser) {
+        const user = userRepository.create(userData);
+        const savedUser = await userRepository.save(user);
+        users.push(savedUser);
+        console.log(`  ✓ Created user: ${userData.name} (${userData.email})`);
+      } else {
+        users.push(existingUser);
+        console.log(`  - User already exists: ${userData.email}`);
+      }
+    } catch (error: any) {
+      // If user already exists (unique constraint violation), find and use existing
+      if (error.code === '23505' || error.message?.includes('already exists')) {
+        const existingUser = await userRepository.findOne({ where: { email: userData.email } });
+        if (existingUser) {
+          users.push(existingUser);
+          console.log(`  - User already exists (recovered): ${userData.email}`);
+        } else {
+          console.log(`  ⚠ User ${userData.email} exists but could not be retrieved`);
+        }
+      } else {
+        throw error;
+      }
     }
+  }
+  
+  // Ensure Gerald Sadya is in the users array (for demo purposes)
+  const geraldEmail = 'geralds@silvertreebrands.com';
+  let geraldUser = users.find(u => u.email === geraldEmail);
+  if (!geraldUser) {
+    const geraldFromDb = await userRepository.findOne({ where: { email: geraldEmail } });
+    if (geraldFromDb) {
+      users.push(geraldFromDb);
+      geraldUser = geraldFromDb;
+      console.log(`  ✓ Found Gerald Sadya in database and added to users array`);
+    }
+  }
+
+  // Set up manager relationships for testing
+  console.log('Setting up manager relationships...');
+  
+  // Set geralds@silvertreebrands.com as manager for sadyageraldm@gmail.com (for testing notifications)
+  const sadyageraldUser = users.find(u => u.email === 'sadyageraldm@gmail.com');
+  if (sadyageraldUser && geraldUser && sadyageraldUser.managerId !== geraldUser.id) {
+    sadyageraldUser.managerId = geraldUser.id;
+    await userRepository.save(sadyageraldUser);
+    console.log(`  ✓ Set ${geraldUser.email} as manager for ${sadyageraldUser.email}`);
+  }
+  
+  // For demo: Make geralds@silvertreebrands.com be its own manager so Slack notifications work
+  // (since geralds@silvertreebrands.com exists in Slack workspace)
+  if (geraldUser) {
+    // Always update to self-manager for Slack demo
+    const johnSmithForGerald = users.find(u => u.email === 'john.smith@silvertreebrands.com');
+    const currentManagerId = geraldUser.managerId;
+    
+    // Update to self-manager if not already set or if set to john.smith
+    if (!currentManagerId || (johnSmithForGerald && currentManagerId === johnSmithForGerald.id) || currentManagerId !== geraldUser.id) {
+      geraldUser.managerId = geraldUser.id; // Self-manager for demo
+      await userRepository.save(geraldUser);
+      console.log(`  ✓ Set Gerald Sadya as own manager (for Slack demo)`);
+    } else {
+      console.log(`  - Gerald Sadya already set as own manager`);
+    }
+  }
+
+  // Remove all grants for Gerald Sadya (for demo purposes)
+  console.log('Clearing Gerald Sadya access grants...');
+  // geraldUser is already defined above
+  if (geraldUser) {
+    // Delete access requests for Gerald
+    try {
+      const { AccessRequest } = await import('../access-control/entities/access-request.entity');
+      const accessRequestRepository = dataSource.getRepository(AccessRequest);
+      await accessRequestRepository
+        .createQueryBuilder()
+        .delete()
+        .where('requesterId = :userId OR targetUserId = :userId', { userId: geraldUser.id })
+        .execute();
+    } catch (error) {
+      // Ignore if table doesn't exist yet
+    }
+
+    // Delete all grants for Gerald
+    await grantRepository
+      .createQueryBuilder()
+      .delete()
+      .where('userId = :userId', { userId: geraldUser.id })
+      .execute();
+    
+    console.log(`  ✓ Cleared all access grants for Gerald Sadya`);
+  } else {
+    console.log(`  - Gerald Sadya not found`);
   }
 
   // Seed Systems

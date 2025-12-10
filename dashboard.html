@@ -479,6 +479,40 @@
             color: white;
         }
         
+        /* PHASE2-008: Status Badge Styles */
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            display: inline-block;
+        }
+        .status-requested {
+            background: #fef3cd;
+            color: #856404;
+        }
+        .status-approved {
+            background: #cce5ff;
+            color: #004085;
+        }
+        .status-active {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status-to_remove {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .status-removed {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+        .status-rejected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
         /* My Access View Styles */
         .access-header {
             margin-bottom: 48px;
@@ -786,6 +820,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
                     </svg>
                     <span>My Access</span>
+                    <span style="font-size: 10px; opacity: 0.7; display: block; margin-top: 2px;">Your grants & requests</span>
                 </button>
                 <!-- System owners see full navigation -->
                 <button class="nav-item active" id="nav-users" onclick="switchView('users')" style="display: none;">
@@ -794,12 +829,28 @@
                     </svg>
                     <span>Users</span>
                 </button>
-                <button class="nav-item" id="nav-requests" onclick="switchView('requests')" style="display: none; position: relative;">
+                <!-- Removed "Access Requests" tab - requests are shown in "My Access" -->
+                <button class="nav-item" id="nav-approvals" onclick="switchView('approvals')" style="display: none; position: relative;">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
-                    <span>Access Requests</span>
-                    <span id="requests-badge" style="display: none; position: absolute; top: 8px; right: 8px; background: var(--destructive); color: white; border-radius: 10px; padding: 2px 6px; font-size: 10px; font-weight: 600; min-width: 18px; text-align: center;">0</span>
+                    <span>Pending Approvals</span>
+                    <span style="font-size: 10px; opacity: 0.7; display: block; margin-top: 2px;">Approve team requests</span>
+                    <span id="approvals-badge" style="display: none; position: absolute; top: 8px; right: 8px; background: var(--destructive); color: white; border-radius: 10px; padding: 2px 6px; font-size: 10px; font-weight: 600; min-width: 18px; text-align: center;">0</span>
+                </button>
+                <button class="nav-item" id="nav-provisioning" onclick="switchView('provisioning')" style="display: none; position: relative;">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                    </svg>
+                    <span>Pending Provisioning</span>
+                    <span id="provisioning-badge" style="display: none; position: absolute; top: 8px; right: 8px; background: var(--destructive); color: white; border-radius: 10px; padding: 2px 6px; font-size: 10px; font-weight: 600; min-width: 18px; text-align: center;">0</span>
+                </button>
+                <button class="nav-item" id="nav-removal" onclick="switchView('removal')" style="display: none; position: relative;">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                    <span>Pending Removal</span>
+                    <span id="removal-badge" style="display: none; position: absolute; top: 8px; right: 8px; background: var(--destructive); color: white; border-radius: 10px; padding: 2px 6px; font-size: 10px; font-weight: 600; min-width: 18px; text-align: center;">0</span>
                 </button>
                 <button class="nav-item" id="nav-overview" onclick="switchView('overview')" style="display: none;">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -889,19 +940,54 @@
             
             // Show/hide nav items based on role
             const isOwner = currentUser.role === 'owner' || currentUser.role === 'admin';
+
+            // Check if user is a manager (manages other users, not just themselves)
+            let isManager = false;
+            try {
+                const token = localStorage.getItem('authToken');
+                // Get all users and check if any have this user as their manager (excluding self)
+                const usersResponse = await fetch(`${API_BASE}/api/v1/users`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (usersResponse.ok) {
+                    const usersData = await usersResponse.json();
+                    const users = usersData.data || usersData || [];
+                    // User is a manager if someone OTHER than themselves has them as manager
+                    isManager = users.some(u => u.managerId === currentUser.id && u.id !== currentUser.id);
+                }
+            } catch {
+                isManager = false;
+            }
+            
+            // Remove Pending Approvals from sidebar for everyone; managers will see approvals inside My Access
+            document.getElementById('nav-approvals').style.display = 'none';
+
             if (isOwner) {
                 document.getElementById('nav-users').style.display = 'flex';
-                document.getElementById('nav-requests').style.display = 'flex';
+                // Removed nav-requests - requests shown in "my-access"
+                document.getElementById('nav-provisioning').style.display = 'flex';
+                document.getElementById('nav-removal').style.display = 'flex';
                 document.getElementById('nav-overview').style.display = 'flex';
                 document.getElementById('nav-log').style.display = 'flex';
                 document.getElementById('nav-audit').style.display = 'flex';
-                document.getElementById('nav-my-access').style.display = 'none';
+                document.getElementById('nav-my-access').style.display = 'flex';
                 loadView('users');
-                // Update request badge for owners
-                updateRequestsBadge();
-            } else {
+                updateProvisioningBadge();
+                updateRemovalBadge();
+            } else if (isManager) {
+                document.getElementById('nav-my-access').style.display = 'flex';
                 document.getElementById('nav-users').style.display = 'none';
-                document.getElementById('nav-requests').style.display = 'none';
+                document.getElementById('nav-provisioning').style.display = 'none';
+                document.getElementById('nav-removal').style.display = 'none';
+                document.getElementById('nav-overview').style.display = 'none';
+                document.getElementById('nav-log').style.display = 'none';
+                document.getElementById('nav-audit').style.display = 'none';
+                loadView('my-access');
+            } else {
+                // Regular user - hide all admin/manager tabs
+                document.getElementById('nav-users').style.display = 'none';
+                document.getElementById('nav-provisioning').style.display = 'none';
+                document.getElementById('nav-removal').style.display = 'none';
                 document.getElementById('nav-overview').style.display = 'none';
                 document.getElementById('nav-log').style.display = 'none';
                 document.getElementById('nav-audit').style.display = 'none';
@@ -940,6 +1026,9 @@
                 'my-access': { title: 'My Access', desc: 'View your access grants and request new access' },
                 users: { title: 'Users & Access', desc: 'Manage users and their system access' },
                 requests: { title: 'Access Requests', desc: 'Review and approve/deny access requests' },
+                approvals: { title: 'Pending Approvals', desc: 'Approve or reject access requests for your team' },
+                provisioning: { title: 'Pending Provisioning', desc: 'Provision approved access requests' },
+                removal: { title: 'Pending Removal', desc: 'Confirm removal of access grants' },
                 overview: { title: 'Access Overview', desc: 'View and manage all access grants' },
                 log: { title: 'Log Access Grant', desc: 'Record a new access grant' },
                 audit: { title: 'Audit Log', desc: 'Track all access changes' }
@@ -958,7 +1047,16 @@
             } else if (view === 'users') {
                 container.innerHTML = await loadUsersView();
             } else if (view === 'requests') {
+                // Removed - requests are shown in "my-access" view
+                loadView('my-access');
+                return;
                 container.innerHTML = await loadRequestsView();
+            } else if (view === 'approvals') {
+                container.innerHTML = await loadApprovalsView();
+            } else if (view === 'provisioning') {
+                container.innerHTML = await loadProvisioningView();
+            } else if (view === 'removal') {
+                container.innerHTML = await loadRemovalView();
             } else if (view === 'overview') {
                 container.innerHTML = await loadAccessOverviewView();
                 // Initialize overview data after HTML is rendered
@@ -984,6 +1082,7 @@
         let expandedUsers = {};
         let myGrants = [];
         let myRequests = [];
+        let pendingManagerApprovals = [];
 
         async function loadMyAccessView() {
             const container = document.getElementById('view-container');
@@ -996,29 +1095,93 @@
                     'Content-Type': 'application/json'
                 };
 
-                // Load user's grants
-                const grantsResp = await fetch(`${API_BASE}/api/v1/users/me/grants`, { headers });
-                const grantsData = await grantsResp.json();
-                myGrants = grantsData.data || [];
+                // Get current user ID
+                let currentUserId = currentUser?.id;
+                if (!currentUserId) {
+                    const meResp = await fetch(`${API_BASE}/api/v1/auth/me`, { headers });
+                    const meData = await meResp.json();
+                    // Find user by email
+                    const usersResp = await fetch(`${API_BASE}/api/v1/users`, { headers });
+                    const usersData = await usersResp.json();
+                    const allUsers = usersData.data || usersData || [];
+                    const foundUser = allUsers.find(u => u.email === meData.email);
+                    if (foundUser) {
+                        currentUserId = foundUser.id;
+                        currentUser = { ...currentUser, id: foundUser.id, email: foundUser.email };
+                    }
+                }
+
+                // Load user's grants using access-overview endpoint (all statuses for filtering)
+                if (currentUserId) {
+                    const grantsResp = await fetch(`${API_BASE}/api/v1/access-overview?userId=${currentUserId}&limit=1000`, { headers });
+                    if (grantsResp.ok) {
+                        const grantsData = await grantsResp.json();
+                        myGrants = grantsData.data || [];
+                    }
+                }
 
                 // Load user's requests
-                const requestsResp = await fetch(`${API_BASE}/api/v1/users/me/requests`, { headers });
-                const requestsData = await requestsResp.json();
-                myRequests = requestsData.data || [];
+                const requestsResp = await fetch(`${API_BASE}/api/v1/access-requests`, { headers });
+                if (requestsResp.ok) {
+                    const requestsData = await requestsResp.json();
+                    myRequests = requestsData.data || [];
+                }
+
+                // NEVER load manager pending approvals for regular users - ONLY for managers
+                // This section should NOT appear for regular users at all
+                pendingManagerApprovals = [];
 
                 // Load systems for request form
                 const systemsResp = await fetch(`${API_BASE}/api/v1/systems`);
                 const systemsData = await systemsResp.json();
                 systems = systemsData.data || systemsData || [];
 
-                return renderMyAccessView();
+                // Initialize filters
+                filteredRequests = [];
+                requestStatusFilter = '';
+                requestSortOrder = 'date-desc';
+                filteredGrants = [];
+                grantStatusFilter = '';
+                
+                // Check if user is a manager for conditional rendering
+                let isManagerForView = false;
+                try {
+                    const usersResponse = await fetch(`${API_BASE}/api/v1/users`, { headers });
+                    if (usersResponse.ok) {
+                        const usersData = await usersResponse.json();
+                        const users = usersData.data || usersData || [];
+                        isManagerForView = users.some(u => u.managerId === currentUserId && u.id !== currentUserId);
+                    }
+                } catch {
+                    isManagerForView = false;
+                }
+                
+                // CRITICAL: ONLY load pending approvals if user is actually a manager
+                // Regular users should NEVER see this section - ALWAYS clear first
+                pendingManagerApprovals = [];
+                if (isManagerForView === true) {
+                    console.log('[UI] User is a manager, loading pending approvals...');
+                    const pendingResp = await fetch(`${API_BASE}/api/v1/access-requests/pending`, { headers });
+                    if (pendingResp.ok) {
+                        const pendingData = await pendingResp.json();
+                        const pendingList = Array.isArray(pendingData) ? pendingData : (pendingData.data || []);
+                        pendingManagerApprovals = pendingList || [];
+                        console.log(`[UI] Loaded ${pendingManagerApprovals.length} pending approvals for manager`);
+                    }
+                } else {
+                    // Explicitly clear for non-managers - this should ALWAYS be empty
+                    pendingManagerApprovals = [];
+                    console.log('[UI] User is NOT a manager, clearing pending approvals');
+                }
+                
+                return renderMyAccessView(isManagerForView);
             } catch (error) {
                 console.error('Error loading my access:', error);
                 return `<div class="card">Error loading your access: ${error.message}</div>`;
             }
         }
 
-        function renderMyAccessView() {
+        function renderMyAccessView(isManager = false) {
             return `
                 <div>
                     <!-- Header Section -->
@@ -1028,58 +1191,167 @@
                                 <h1>My Access</h1>
                                 <p>Manage your access grants and request new permissions</p>
                             </div>
-                            <button class="btn btn-primary" onclick="showRequestAccessForm()">
-                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right: 6px;">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                                </svg>
-                                Request Access
-                            </button>
+                            <div style="display: flex; gap: 12px;">
+                                <button class="btn btn-primary" onclick="showRequestAccessForm()">
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right: 6px;">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                    </svg>
+                                    Request Access
+                                </button>
+                                <button class="btn btn-outline" onclick="showCopyFromUserForm()">
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right: 6px;">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                    </svg>
+                                    Copy from User
+                                </button>
+                            </div>
                         </div>
                     </div>
 
                     <!-- Access Grants Section -->
                     <div style="margin-bottom: 48px;">
-                        <div class="section-header">
-                            <div class="section-header-icon">
-                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
-                                </svg>
-                            </div>
-                            <div class="section-header-text">
-                                <h2>Current Access</h2>
-                                <p>Your active system access permissions</p>
-                            </div>
-                            <span class="section-count">${myGrants.length}</span>
-                        </div>
-                        <div id="my-grants-list">
-                            ${renderMyGrantsList()}
-                        </div>
+                <div class="section-header">
+                    <div class="section-header-icon">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                        </svg>
                     </div>
+                    <div class="section-header-text">
+                        <h2>Current Access</h2>
+                        <p>Your active system access permissions</p>
+                    </div>
+                    <span class="section-count">${myGrants.length}</span>
+                </div>
+                <div id="my-grants-list">
+                    ${renderMyGrantsList()}
+                </div>
+            </div>
 
-                    <!-- Access Requests Section -->
-                    <div>
-                        <div class="section-header">
-                            <div class="section-header-icon">
-                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                </svg>
-                            </div>
-                            <div class="section-header-text">
-                                <h2>Access Requests</h2>
-                                <p>Track your access request status</p>
-                            </div>
-                            <span class="section-count">${myRequests.length}</span>
-                        </div>
-                        <div id="my-requests-list">
-                            ${renderMyRequestsList()}
-                        </div>
+            <!-- Access Requests Section -->
+            <div>
+                <div class="section-header">
+                    <div class="section-header-icon">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                    </div>
+                    <div class="section-header-text">
+                        <h2>Access Requests</h2>
+                        <p>Track your access request status</p>
+                    </div>
+                    <span class="section-count">${myRequests.length}</span>
+                </div>
+                <div style="margin-bottom: 16px; display: flex; gap: 12px; align-items: center;">
+                    <select id="request-status-filter" class="input" style="width: auto; min-width: 150px;" onchange="filterMyRequests()">
+                        <option value="">All Statuses</option>
+                        <option value="requested">Requested</option>
+                        <option value="approved">Approved</option>
+                        <option value="rejected">Rejected</option>
+                    </select>
+                    <select id="request-sort" class="input" style="width: auto; min-width: 150px;" onchange="sortMyRequests()">
+                        <option value="date-desc">Newest First</option>
+                        <option value="date-asc">Oldest First</option>
+                    </select>
+                </div>
+                <div id="my-requests-list">
+                    ${renderMyRequestsList()}
+                </div>
+            </div>
+
+            ${isManager === true && Array.isArray(pendingManagerApprovals) && pendingManagerApprovals.length > 0 ? `
+            <!-- Manager Approvals Inline - ONLY show for managers -->
+            <div style="margin-top: 32px;">
+                <div class="section-header">
+                    <div class="section-header-icon">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <div class="section-header-text">
+                        <h2>Team Pending Approvals</h2>
+                        <p>Requests awaiting your approval as manager</p>
+                    </div>
+                    <span class="section-count">${pendingManagerApprovals.length}</span>
+                </div>
+                <div class="card">
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="border-bottom: 2px solid var(--border);">
+                                    <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 12px; text-transform: uppercase; color: var(--muted-foreground);">Requester</th>
+                                    <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 12px; text-transform: uppercase; color: var(--muted-foreground);">For User</th>
+                                    <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 12px; text-transform: uppercase; color: var(--muted-foreground);">System</th>
+                                    <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 12px; text-transform: uppercase; color: var(--muted-foreground);">Instance</th>
+                                    <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 12px; text-transform: uppercase; color: var(--muted-foreground);">Tier</th>
+                                    <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 12px; text-transform: uppercase; color: var(--muted-foreground);">Justification</th>
+                                    <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 12px; text-transform: uppercase; color: var(--muted-foreground);">Requested</th>
+                                    <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 12px; text-transform: uppercase; color: var(--muted-foreground);">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${pendingManagerApprovals.map(req => {
+                                    const items = req.items || [];
+                                    return items.map(item => {
+                                        const requesterName = req.requester?.name || req.requesterId || 'Unknown';
+                                        const targetUserName = req.targetUser?.name || req.targetUserId || 'Unknown';
+                                        const systemName = item.systemInstance?.system?.name || 'Unknown';
+                                        const instanceName = item.systemInstance?.name || 'Unknown';
+                                        const tierName = item.accessTier?.name || 'Unknown';
+                                        const justification = req.note || item.note || '-';
+                                        const requestedDate = new Date(req.createdAt || Date.now()).toLocaleDateString();
+                                        return `
+                                            <tr style="border-bottom: 1px solid var(--border);">
+                                                <td style="padding: 12px;">${requesterName}</td>
+                                                <td style="padding: 12px;">${targetUserName}</td>
+                                                <td style="padding: 12px;">${systemName}</td>
+                                                <td style="padding: 12px;">${instanceName}</td>
+                                                <td style="padding: 12px;">${tierName}</td>
+                                                <td style="padding: 12px; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${justification}">${justification}</td>
+                                                <td style="padding: 12px;">${requestedDate}</td>
+                                                <td style="padding: 12px;">
+                                                    <div style="display: flex; gap: 8px;">
+                                                        <button class="btn btn-sm" style="background: #22c55e; color: white; padding: 6px 12px; font-size: 12px;" onclick="approveRequest('${req.id}')">Approve</button>
+                                                        <button class="btn btn-sm" style="background: var(--destructive); color: white; padding: 6px 12px; font-size: 12px;" onclick="showRejectModal('${req.id}')">Reject</button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        `;
+                                    }).join('');
+                                }).join('')}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
-            `;
+            </div>
+            ` : ''}
+        </div>
+    `;
+        }
+
+        function filterMyGrants() {
+            grantStatusFilter = document.getElementById('grant-status-filter')?.value || '';
+            applyGrantFilters();
+        }
+
+        function applyGrantFilters() {
+            filteredGrants = [...myGrants];
+            
+            // Apply status filter
+            if (grantStatusFilter) {
+                filteredGrants = filteredGrants.filter(g => g.status === grantStatusFilter);
+            }
+            
+            // Re-render
+            const listContainer = document.getElementById('my-grants-list');
+            if (listContainer) {
+                listContainer.innerHTML = renderMyGrantsList();
+            }
         }
 
         function renderMyGrantsList() {
-            if (myGrants.length === 0) {
+            const grantsToRender = filteredGrants.length > 0 ? filteredGrants : myGrants;
+            
+            if (grantsToRender.length === 0) {
                 return `
                     <div class="empty-state">
                         <div class="empty-state-icon">
@@ -1093,18 +1365,24 @@
                 `;
             }
 
-            return myGrants.map(grant => {
+            return grantsToRender.map(grant => {
                 const systemName = grant.systemInstance?.system?.name || 'Unknown System';
                 const instanceName = grant.systemInstance?.name || 'Unknown Instance';
                 const tierName = grant.accessTier?.name || 'Unknown Tier';
                 const grantedByName = grant.grantedBy?.name || grant.grantedBy?.email || 'Unknown';
                 const grantedAt = grant.grantedAt ? new Date(grant.grantedAt) : null;
                 const grantedAtFormatted = grantedAt ? grantedAt.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : 'Unknown date';
-                const statusBadge = grant.status === 'active' 
-                    ? '<span class="badge badge-success">Active</span>' 
-                    : grant.status === 'to_remove' 
-                    ? '<span class="badge badge-warning">To Remove</span>'
-                    : '<span class="badge badge-error">Removed</span>';
+                // Status badge with proper colors per PHASE2-008
+                let statusBadge = '';
+                if (grant.status === 'active') {
+                    statusBadge = '<span class="status-badge status-active">Active</span>';
+                } else if (grant.status === 'to_remove') {
+                    statusBadge = '<span class="status-badge status-to_remove">To Remove</span>';
+                } else if (grant.status === 'removed') {
+                    statusBadge = '<span class="status-badge status-removed">Removed</span>';
+                } else {
+                    statusBadge = '<span class="status-badge status-removed">' + (grant.status || 'Unknown') + '</span>';
+                }
 
                 return `
                     <div class="grant-card">
@@ -1140,8 +1418,48 @@
             }).join('');
         }
 
+        let filteredRequests = [];
+        let requestStatusFilter = '';
+        let requestSortOrder = 'date-desc';
+        let filteredGrants = [];
+        let grantStatusFilter = '';
+
+        function filterMyRequests() {
+            requestStatusFilter = document.getElementById('request-status-filter')?.value || '';
+            applyRequestFilters();
+        }
+
+        function sortMyRequests() {
+            requestSortOrder = document.getElementById('request-sort')?.value || 'date-desc';
+            applyRequestFilters();
+        }
+
+        function applyRequestFilters() {
+            filteredRequests = [...myRequests];
+            
+            // Apply status filter
+            if (requestStatusFilter) {
+                filteredRequests = filteredRequests.filter(r => r.status === requestStatusFilter);
+            }
+            
+            // Apply sorting
+            filteredRequests.sort((a, b) => {
+                const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+                const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+                return requestSortOrder === 'date-asc' ? dateA - dateB : dateB - dateA;
+            });
+            
+            // Re-render
+            const listContainer = document.getElementById('my-requests-list');
+            if (listContainer) {
+                listContainer.innerHTML = renderMyRequestsList();
+            }
+        }
+
         function renderMyRequestsList() {
-            if (myRequests.length === 0) {
+            const requestsToRender = filteredRequests.length > 0 ? filteredRequests : myRequests;
+            
+            if (requestsToRender.length === 0) {
                 return `
                     <div class="empty-state">
                         <div class="empty-state-icon">
@@ -1155,24 +1473,41 @@
                 `;
             }
 
-            return myRequests.map(request => {
-                const isRequester = request.requesterId === currentUser.id;
+            return requestsToRender.map(request => {
+                const isRequester = request.requesterId === currentUser?.id;
                 const targetUserName = request.targetUser?.name || request.targetUser?.email || 'Unknown';
                 const requesterName = request.requester?.name || request.requester?.email || 'Unknown';
                 const createdAt = request.createdAt ? new Date(request.createdAt) : null;
                 const createdAtFormatted = createdAt ? createdAt.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : 'Unknown date';
+                
+                // Request status badge
+                let requestStatusBadge = '';
+                const status = (request.status || '').toLowerCase();
+                if (status === 'approved') {
+                    requestStatusBadge = '<span class="status-badge status-approved" style="margin-left: 8px;">Approved</span>';
+                } else if (status === 'rejected') {
+                    requestStatusBadge = '<span class="status-badge status-rejected" style="margin-left: 8px;">Rejected</span>';
+                } else if (status === 'requested') {
+                    requestStatusBadge = '<span class="status-badge status-requested" style="margin-left: 8px;">Requested</span>';
+                } else {
+                    // Default to requested/pending if status is unknown
+                    requestStatusBadge = '<span class="status-badge status-requested" style="margin-left: 8px;">Pending</span>';
+                }
 
                 const itemsHtml = request.items?.map(item => {
                     const systemName = item.systemInstance?.system?.name || 'Unknown System';
                     const instanceName = item.systemInstance?.name || 'Unknown Instance';
                     const tierName = item.accessTier?.name || 'Unknown Tier';
+                    // Status badge with proper colors per PHASE2-008
                     let itemStatusBadge = '';
                     if (item.status === 'approved') {
-                        itemStatusBadge = '<span class="badge badge-success" style="font-size: 11px; padding: 3px 8px;">Approved</span>';
+                        itemStatusBadge = '<span class="status-badge status-approved" style="font-size: 11px; padding: 3px 8px;">Approved</span>';
                     } else if (item.status === 'rejected') {
-                        itemStatusBadge = '<span class="badge badge-error" style="font-size: 11px; padding: 3px 8px;">Rejected</span>';
+                        itemStatusBadge = '<span class="status-badge status-rejected" style="font-size: 11px; padding: 3px 8px;">Rejected</span>';
+                    } else if (item.status === 'requested') {
+                        itemStatusBadge = '<span class="status-badge status-requested" style="font-size: 11px; padding: 3px 8px;">Requested</span>';
                     } else {
-                        itemStatusBadge = '<span class="badge badge-warning" style="font-size: 11px; padding: 3px 8px;">Pending</span>';
+                        itemStatusBadge = '<span class="status-badge status-requested" style="font-size: 11px; padding: 3px 8px;">Pending</span>';
                     }
                     
                     return `
@@ -1198,6 +1533,7 @@
                             <div class="request-info">
                                 <div class="request-title">
                                     ${isRequester ? `Request for ${targetUserName}` : `Request from ${requesterName}`}
+                                    ${requestStatusBadge}
                                 </div>
                                 <div class="request-meta">
                                     <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1226,6 +1562,20 @@
 
         async function showRequestAccessForm() {
             try {
+                const token = localStorage.getItem('authToken');
+                const headers = {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                };
+
+                // Load users (for managers to request for team members)
+                const usersResp = await fetch(`${API_BASE}/api/v1/users`, { headers });
+                let allUsers = [];
+                if (usersResp.ok) {
+                    const usersData = await usersResp.json();
+                    allUsers = usersData.data || usersData || [];
+                }
+
                 // Load systems, instances, and tiers for the form
                 const systemsResp = await fetch(`${API_BASE}/api/v1/systems`);
                 if (!systemsResp.ok) {
@@ -1242,6 +1592,17 @@
                     return;
                 }
 
+                // Get current user ID
+                let currentUserId = currentUser?.id;
+                if (!currentUserId && allUsers.length > 0) {
+                    const meResp = await fetch(`${API_BASE}/api/v1/auth/me`, { headers });
+                    const meData = await meResp.json();
+                    const foundUser = allUsers.find(u => u.email === meData.email);
+                    if (foundUser) {
+                        currentUserId = foundUser.id;
+                    }
+                }
+
                 // Create modal for request form
                 const modal = document.createElement('div');
                 modal.className = 'modal';
@@ -1254,7 +1615,15 @@
                         </div>
                         <form id="request-access-form" onsubmit="handleRequestAccess(event)">
                             <div style="margin-bottom: 16px;">
-                                <label style="display: block; margin-bottom: 8px; font-weight: 500;">System</label>
+                                <label style="display: block; margin-bottom: 8px; font-weight: 500;">Request for *</label>
+                                <select id="request-user" class="input" required>
+                                    <option value="">Select user...</option>
+                                    ${allUsers.map(u => `<option value="${u.id}" ${u.id === currentUserId ? 'selected' : ''}>${u.name} (${u.email})</option>`).join('')}
+                                </select>
+                                <small style="display: block; margin-top: 4px; color: var(--muted-foreground); font-size: 12px;">Select yourself or a team member</small>
+                            </div>
+                            <div style="margin-bottom: 16px;">
+                                <label style="display: block; margin-bottom: 8px; font-weight: 500;">System *</label>
                                 <select id="request-system" class="input" required onchange="handleRequestSystemChange()">
                                     <option value="">Select a system</option>
                                     ${allSystems.map(s => `<option value="${s.id}">${s.name}</option>`).join('')}
@@ -1267,10 +1636,14 @@
                                 </select>
                             </div>
                             <div style="margin-bottom: 16px;">
-                                <label style="display: block; margin-bottom: 8px; font-weight: 500;">Access Tier</label>
+                                <label style="display: block; margin-bottom: 8px; font-weight: 500;">Access Tier *</label>
                                 <select id="request-tier" class="input" required disabled>
                                     <option value="">Select an instance first</option>
                                 </select>
+                            </div>
+                            <div style="margin-bottom: 16px;">
+                                <label style="display: block; margin-bottom: 8px; font-weight: 500;">Justification</label>
+                                <textarea id="request-justification" class="input" rows="3" placeholder="Why do you need this access? (Optional)"></textarea>
                             </div>
                             <div style="display: flex; gap: 12px; justify-content: flex-end;">
                                 <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancel</button>
@@ -1353,17 +1726,19 @@
         async function handleRequestAccess(event) {
             event.preventDefault();
             const form = event.target;
+            const targetUserId = document.getElementById('request-user').value;
             const instanceId = document.getElementById('request-instance').value;
             const tierId = document.getElementById('request-tier').value;
+            const justification = document.getElementById('request-justification').value;
 
-            if (!instanceId || !tierId) {
-                alert('Please select both instance and access tier');
+            if (!targetUserId || !instanceId || !tierId) {
+                alert('Please fill in all required fields');
                 return;
             }
 
             // Validate UUIDs
             const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-            if (!uuidRegex.test(instanceId) || !uuidRegex.test(tierId)) {
+            if (!uuidRegex.test(targetUserId) || !uuidRegex.test(instanceId) || !uuidRegex.test(tierId)) {
                 alert('Invalid selection. Please try selecting again.');
                 return;
             }
@@ -1375,32 +1750,23 @@
             };
 
             try {
-                // Get current user ID from stored user or fetch it
-                let userId = currentUser?.id;
-                if (!userId) {
-                    const meResp = await fetch(`${API_BASE}/api/v1/auth/me`, { headers });
-                    const meData = await meResp.json();
-                    userId = meData.id;
-                    if (userId) {
-                        currentUser.id = userId;
-                        localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                    }
-                }
+                const requestBody = {
+                    targetUserId: targetUserId,
+                    items: [{
+                        systemInstanceId: instanceId,
+                        accessTierId: tierId
+                    }]
+                };
 
-                if (!userId) {
-                    throw new Error('User ID not found. Please log in again.');
+                // Add note (justification) if provided
+                if (justification && justification.trim()) {
+                    requestBody.note = justification.trim();
                 }
 
                 const response = await fetch(`${API_BASE}/api/v1/access-requests`, {
                     method: 'POST',
                     headers,
-                    body: JSON.stringify({
-                        targetUserId: userId,
-                        items: [{
-                            systemInstanceId: instanceId,
-                            accessTierId: tierId
-                        }]
-                    })
+                    body: JSON.stringify(requestBody)
                 });
 
                 if (!response.ok) {
@@ -1414,6 +1780,16 @@
                     throw new Error(errorMessage);
                 }
 
+                const result = await response.json();
+                
+                // Show success message with status
+                const status = result.status || 'requested';
+                const message = status === 'approved' 
+                    ? 'Request auto-approved! Awaiting provisioning.' 
+                    : 'Request submitted! Awaiting manager approval.';
+                
+                alert(message);
+
                 // Close modal and reload view
                 form.closest('.modal').remove();
                 const container = document.getElementById('view-container');
@@ -1426,6 +1802,280 @@
             } catch (error) {
                 alert(`Error: ${error.message}`);
                 console.error('Request access error:', error);
+            }
+        }
+
+        async function showCopyFromUserForm() {
+            try {
+                const token = localStorage.getItem('authToken');
+                const headers = {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                };
+
+                // Load users
+                const usersResp = await fetch(`${API_BASE}/api/v1/users`, { headers });
+                let allUsers = [];
+                if (usersResp.ok) {
+                    const usersData = await usersResp.json();
+                    allUsers = usersData.data || usersData || [];
+                }
+
+                // Load systems for filtering
+                const systemsResp = await fetch(`${API_BASE}/api/v1/systems`);
+                const systemsData = await systemsResp.json();
+                const allSystems = Array.isArray(systemsData) ? systemsData : (systemsData.data || []);
+
+                // Get current user ID
+                let currentUserId = currentUser?.id;
+                if (!currentUserId && allUsers.length > 0) {
+                    const meResp = await fetch(`${API_BASE}/api/v1/auth/me`, { headers });
+                    const meData = await meResp.json();
+                    const foundUser = allUsers.find(u => u.email === meData.email);
+                    if (foundUser) {
+                        currentUserId = foundUser.id;
+                    }
+                }
+
+                // Create modal for copy form
+                const modal = document.createElement('div');
+                modal.className = 'modal';
+                modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center;';
+                modal.innerHTML = `
+                    <div class="modal-content" style="background: var(--card); border-radius: 8px; padding: 24px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                            <h2 style="font-size: 20px; font-weight: 600;">Copy Access from User</h2>
+                            <button onclick="this.closest('.modal').remove()" style="background: none; border: none; font-size: 24px; cursor: pointer;">&times;</button>
+                        </div>
+                        <form id="copy-from-user-form" onsubmit="handleCopyFromUser(event)">
+                            <div style="margin-bottom: 16px;">
+                                <label style="display: block; margin-bottom: 8px; font-weight: 500;">Copy from (Source User) *</label>
+                                <input type="text" id="copy-source-user-search" class="input" placeholder="Search users..." 
+                                    oninput="filterUserDropdown('copy-source-user-search', 'copy-source-user')" 
+                                    style="margin-bottom: 8px;">
+                                <select id="copy-source-user" class="input" required onchange="loadSourceUserGrants()">
+                                    <option value="">Select source user...</option>
+                                    ${allUsers.map(u => `<option value="${u.id}">${u.name} (${u.email})</option>`).join('')}
+                                </select>
+                                <small style="display: block; margin-top: 4px; color: var(--muted-foreground); font-size: 12px;">User whose access will be copied</small>
+                            </div>
+                            <div style="margin-bottom: 16px;">
+                                <label style="display: block; margin-bottom: 8px; font-weight: 500;">Copy to (Target User) *</label>
+                                <input type="text" id="copy-target-user-search" class="input" placeholder="Search users..." 
+                                    oninput="filterUserDropdown('copy-target-user-search', 'copy-target-user')" 
+                                    style="margin-bottom: 8px;">
+                                <select id="copy-target-user" class="input" required>
+                                    <option value="">Select target user...</option>
+                                    ${allUsers.map(u => `<option value="${u.id}" ${u.id === currentUserId ? 'selected' : ''}>${u.name} (${u.email})</option>`).join('')}
+                                </select>
+                                <small style="display: block; margin-top: 4px; color: var(--muted-foreground); font-size: 12px;">User who will receive the copied access</small>
+                            </div>
+                            <div id="copy-grants-preview" style="margin-bottom: 16px; display: none;">
+                                <label style="display: block; margin-bottom: 8px; font-weight: 500;">Select Grants to Copy</label>
+                                <div id="copy-grants-list" style="max-height: 300px; overflow-y: auto; border: 1px solid var(--border); border-radius: 6px; padding: 12px; background: var(--background);">
+                                    <p style="color: var(--muted-foreground); text-align: center; padding: 20px;">Select a source user to preview grants</p>
+                                </div>
+                                <small style="display: block; margin-top: 4px; color: var(--muted-foreground); font-size: 12px;">Check the grants you want to copy. Unchecked grants will be excluded.</small>
+                            </div>
+                            <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                                <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancel</button>
+                                <button type="submit" class="btn btn-primary" id="copy-submit-btn" disabled>Copy Access</button>
+                            </div>
+                        </form>
+                    </div>
+                `;
+                document.body.appendChild(modal);
+            } catch (error) {
+                console.error('Error loading copy form:', error);
+                alert(`Error loading copy form: ${error.message}`);
+            }
+        }
+
+        let sourceUserGrants = [];
+        let selectedGrantIds = new Set();
+
+        function filterUserDropdown(searchId, selectId) {
+            const search = document.getElementById(searchId).value.toLowerCase();
+            const select = document.getElementById(selectId);
+            const options = select.querySelectorAll('option');
+            
+            options.forEach(opt => {
+                const text = opt.textContent.toLowerCase();
+                opt.style.display = text.includes(search) || opt.value === '' ? 'block' : 'none';
+            });
+        }
+
+        async function loadSourceUserGrants() {
+            const sourceUserId = document.getElementById('copy-source-user').value;
+            const previewDiv = document.getElementById('copy-grants-preview');
+            const grantsList = document.getElementById('copy-grants-list');
+            const submitBtn = document.getElementById('copy-submit-btn');
+            
+            if (!sourceUserId) {
+                previewDiv.style.display = 'none';
+                submitBtn.disabled = true;
+                return;
+            }
+
+            try {
+                const token = localStorage.getItem('authToken');
+                const headers = {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                };
+
+                // Load source user's active grants
+                const grantsResp = await fetch(`${API_BASE}/api/v1/access-overview?userId=${sourceUserId}&status=active&limit=1000`, { headers });
+                if (!grantsResp.ok) {
+                    throw new Error('Failed to load grants');
+                }
+                const grantsData = await grantsResp.json();
+                sourceUserGrants = grantsData.data || [];
+
+                if (sourceUserGrants.length === 0) {
+                    grantsList.innerHTML = '<p style="color: var(--muted-foreground); text-align: center; padding: 20px;">Source user has no active grants to copy.</p>';
+                    previewDiv.style.display = 'block';
+                    submitBtn.disabled = true;
+                    return;
+                }
+
+                // Render grants with checkboxes
+                grantsList.innerHTML = sourceUserGrants.map(grant => {
+                    const systemName = grant.systemInstance?.system?.name || 'Unknown System';
+                    const instanceName = grant.systemInstance?.name || 'Unknown Instance';
+                    const tierName = grant.accessTier?.name || 'Unknown Tier';
+                    const grantKey = `${grant.systemInstanceId}-${grant.accessTierId}`;
+                    
+                    return `
+                        <div style="display: flex; align-items: center; padding: 8px; border-bottom: 1px solid var(--border);">
+                            <input type="checkbox" 
+                                id="grant-${grantKey}" 
+                                value="${grantKey}"
+                                checked
+                                onchange="toggleGrantSelection('${grantKey}')"
+                                style="margin-right: 12px;">
+                            <label for="grant-${grantKey}" style="flex: 1; cursor: pointer;">
+                                <div style="font-weight: 500;">${systemName}</div>
+                                <div style="font-size: 12px; color: var(--muted-foreground);">${instanceName} • ${tierName}</div>
+                            </label>
+                        </div>
+                    `;
+                }).join('');
+
+                // Initialize all grants as selected
+                selectedGrantIds = new Set(sourceUserGrants.map(g => `${g.systemInstanceId}-${g.accessTierId}`));
+                previewDiv.style.display = 'block';
+                submitBtn.disabled = false;
+            } catch (error) {
+                console.error('Error loading source user grants:', error);
+                grantsList.innerHTML = `<p style="color: var(--destructive); text-align: center; padding: 20px;">Error loading grants: ${error.message}</p>`;
+                previewDiv.style.display = 'block';
+                submitBtn.disabled = true;
+            }
+        }
+
+        function toggleGrantSelection(grantKey) {
+            const checkbox = document.getElementById(`grant-${grantKey}`);
+            if (checkbox.checked) {
+                selectedGrantIds.add(grantKey);
+            } else {
+                selectedGrantIds.delete(grantKey);
+            }
+        }
+
+        async function handleCopyFromUser(event) {
+            event.preventDefault();
+            const form = event.target;
+            const sourceUserId = document.getElementById('copy-source-user').value;
+            const targetUserId = document.getElementById('copy-target-user').value;
+
+            if (!sourceUserId || !targetUserId) {
+                alert('Please select both source and target users');
+                return;
+            }
+
+            if (sourceUserId === targetUserId) {
+                alert('Source and target users cannot be the same');
+                return;
+            }
+
+            if (selectedGrantIds.size === 0) {
+                alert('Please select at least one grant to copy');
+                return;
+            }
+
+            const token = localStorage.getItem('authToken');
+            const headers = {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            };
+
+            try {
+                // Get selected grants and group by system
+                const selectedGrants = sourceUserGrants.filter(g => 
+                    selectedGrantIds.has(`${g.systemInstanceId}-${g.accessTierId}`)
+                );
+                
+                // Get unique system IDs from selected grants
+                const systemIds = [...new Set(selectedGrants.map(g => g.systemInstance?.system?.id).filter(Boolean))];
+                
+                // Get excluded system IDs (systems with grants not selected)
+                const allSystemIds = [...new Set(sourceUserGrants.map(g => g.systemInstance?.system?.id).filter(Boolean))];
+                const excludeSystemIds = allSystemIds.filter(id => !systemIds.includes(id));
+
+                const requestBody = {
+                    sourceUserId: sourceUserId,
+                    targetUserId: targetUserId,
+                };
+
+                // Use systemIds filter to only copy from systems with selected grants
+                // Note: The backend will copy all grants from these systems, but will skip duplicates
+                // For more granular control, we'd need to enhance the backend API
+                if (systemIds.length > 0) {
+                    requestBody.systemIds = systemIds;
+                }
+
+                const response = await fetch(`${API_BASE}/api/v1/access-requests/copy-from-user`, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify(requestBody)
+                });
+
+                if (!response.ok) {
+                    let errorMessage = 'Failed to copy grants';
+                    try {
+                        const error = await response.json();
+                        errorMessage = error.message || error.error || JSON.stringify(error);
+                    } catch (e) {
+                        errorMessage = `Server error: ${response.status} ${response.statusText}`;
+                    }
+                    throw new Error(errorMessage);
+                }
+
+                const result = await response.json();
+                
+                // Show success message with summary
+                const message = `Successfully copied ${result.summary.created} access request(s)!\n\n` +
+                    `Summary:\n` +
+                    `- Total grants found: ${result.summary.total}\n` +
+                    `- Created: ${result.summary.created}\n` +
+                    `- Skipped: ${result.summary.skipped}\n` +
+                    `- Auto-approved: ${result.summary.autoApproved}`;
+                
+                alert(message);
+
+                // Close modal and reload view
+                form.closest('.modal').remove();
+                const container = document.getElementById('view-container');
+                container.innerHTML = await loadMyAccessView();
+                
+                // Update request badge for owners
+                if (currentUser?.role === 'owner' || currentUser?.role === 'admin') {
+                    updateRequestsBadge();
+                }
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+                console.error('Copy from user error:', error);
             }
         }
 
@@ -2041,6 +2691,11 @@
                 const grantsData = await grantsResp.json();
                 const allGrants = grantsData.data || [];
 
+                // Load all access requests to show approvals/rejections
+                const requestsResp = await fetch(`${API_BASE}/api/v1/access-requests`, { headers });
+                const requestsData = await requestsResp.json();
+                const allRequests = Array.isArray(requestsData) ? requestsData : (requestsData.data || []);
+
                 // Convert grants to audit entries
                 const grantAuditEntries = [];
                 
@@ -2074,8 +2729,45 @@
                     });
                 });
 
+                // Convert access requests to audit entries (approvals/rejections)
+                const requestAuditEntries = [];
+                allRequests.forEach(request => {
+                    if (request.status === 'approved' && request.updatedAt) {
+                        // Find manager who approved (could be from managerId or from targetUser.manager)
+                        const approver = request.targetUser?.manager?.name || request.targetUser?.manager?.email || 'Manager';
+                        request.items?.forEach(item => {
+                            requestAuditEntries.push({
+                                id: `approve-${request.id}-${item.id}`,
+                                timestamp: new Date(request.updatedAt),
+                                actor: approver,
+                                action: 'approve',
+                                targetUser: request.targetUser?.name || request.targetUser?.email || 'Unknown',
+                                targetSystem: item.systemInstance?.system?.name || 'Unknown',
+                                targetInstance: item.systemInstance?.name || 'Unknown',
+                                targetTier: item.accessTier?.name || 'Unknown',
+                                details: `Approved access request: ${item.systemInstance?.system?.name || 'System'} (${item.systemInstance?.name || 'Instance'}) - ${item.accessTier?.name || 'Tier'}`
+                            });
+                        });
+                    } else if (request.status === 'rejected' && request.updatedAt) {
+                        const rejector = request.targetUser?.manager?.name || request.targetUser?.manager?.email || 'Manager';
+                        request.items?.forEach(item => {
+                            requestAuditEntries.push({
+                                id: `reject-${request.id}-${item.id}`,
+                                timestamp: new Date(request.updatedAt),
+                                actor: rejector,
+                                action: 'reject',
+                                targetUser: request.targetUser?.name || request.targetUser?.email || 'Unknown',
+                                targetSystem: item.systemInstance?.system?.name || 'Unknown',
+                                targetInstance: item.systemInstance?.name || 'Unknown',
+                                targetTier: item.accessTier?.name || 'Unknown',
+                                details: `Rejected access request: ${item.systemInstance?.system?.name || 'System'} (${item.systemInstance?.name || 'Instance'}) - ${item.accessTier?.name || 'Tier'}${request.note ? ` - Reason: ${request.note}` : ''}`
+                            });
+                        });
+                    }
+                });
+
                 // Merge with frontend audit log (for actions that haven't been saved yet)
-                const allAuditEntries = [...grantAuditEntries, ...auditLog];
+                const allAuditEntries = [...grantAuditEntries, ...requestAuditEntries, ...auditLog];
                 
                 // Sort by timestamp (newest first)
                 allAuditEntries.sort((a, b) => {
@@ -3565,6 +4257,734 @@
             localStorage.removeItem('currentUser');
             window.location.href = 'index.html';
         }
+        // PHASE2-009: Approval Management UI
+        
+        async function loadApprovalsView() {
+            const container = document.getElementById('view-container');
+            container.innerHTML = '<div class="card"><p>Loading pending approvals...</p></div>';
+            
+            try {
+                const token = localStorage.getItem('authToken');
+                const headers = {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                };
+
+                const response = await fetch(`${API_BASE}/api/v1/access-requests/pending`, { headers });
+                if (!response.ok) {
+                    throw new Error(`Failed to load approvals: ${response.statusText}`);
+                }
+                const data = await response.json();
+                const requests = data.data || data || [];
+
+                // Update badge
+                const badge = document.getElementById('approvals-badge');
+                if (badge) {
+                    if (requests.length > 0) {
+                        badge.textContent = requests.length.toString();
+                        badge.style.display = 'block';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                }
+
+                return renderApprovalsView(requests);
+            } catch (error) {
+                console.error('Error loading approvals:', error);
+                return `<div class="card">Error loading approvals: ${error.message}</div>`;
+            }
+        }
+
+        function renderApprovalsView(requests) {
+            if (requests.length === 0) {
+                return `
+                    <div class="card">
+                        <div style="text-align: center; padding: 40px;">
+                            <svg width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin: 0 auto 16px; color: var(--muted-foreground);">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">No Pending Approvals</h3>
+                            <p style="color: var(--muted-foreground);">All access requests have been reviewed.</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            return `
+                <div>
+                    <div class="card" style="margin-bottom: 24px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h2 style="font-size: 20px; font-weight: 600; margin-bottom: 4px;">Pending Approvals</h2>
+                                <p style="color: var(--muted-foreground); font-size: 14px;">${requests.length} request(s) awaiting your approval</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div style="overflow-x: auto;">
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <thead>
+                                    <tr style="border-bottom: 2px solid var(--border);">
+                                        <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 12px; text-transform: uppercase; color: var(--muted-foreground);">Requester</th>
+                                        <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 12px; text-transform: uppercase; color: var(--muted-foreground);">For User</th>
+                                        <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 12px; text-transform: uppercase; color: var(--muted-foreground);">System</th>
+                                        <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 12px; text-transform: uppercase; color: var(--muted-foreground);">Instance</th>
+                                        <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 12px; text-transform: uppercase; color: var(--muted-foreground);">Tier</th>
+                                        <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 12px; text-transform: uppercase; color: var(--muted-foreground);">Justification</th>
+                                        <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 12px; text-transform: uppercase; color: var(--muted-foreground);">Requested</th>
+                                        <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 12px; text-transform: uppercase; color: var(--muted-foreground);">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${requests.map(req => {
+                                        const items = req.items || [];
+                                        return items.map((item, idx) => {
+                                            const requesterName = req.requester?.name || req.requesterId || 'Unknown';
+                                            const targetUserName = req.targetUser?.name || req.targetUserId || 'Unknown';
+                                            const systemName = item.systemInstance?.system?.name || 'Unknown';
+                                            const instanceName = item.systemInstance?.name || 'Unknown';
+                                            const tierName = item.accessTier?.name || 'Unknown';
+                                            const justification = req.note || item.note || '-';
+                                            const requestedDate = new Date(req.createdAt || Date.now()).toLocaleDateString();
+                                            
+                                            return `
+                                                <tr style="border-bottom: 1px solid var(--border);">
+                                                    <td style="padding: 12px;">${requesterName}</td>
+                                                    <td style="padding: 12px;">${targetUserName}</td>
+                                                    <td style="padding: 12px;">${systemName}</td>
+                                                    <td style="padding: 12px;">${instanceName}</td>
+                                                    <td style="padding: 12px;">${tierName}</td>
+                                                    <td style="padding: 12px; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${justification}">${justification}</td>
+                                                    <td style="padding: 12px;">${requestedDate}</td>
+                                                    <td style="padding: 12px;">
+                                                        <div style="display: flex; gap: 8px;">
+                                                            <button class="btn btn-sm" style="background: #22c55e; color: white; padding: 6px 12px; font-size: 12px;" onclick="approveRequest('${req.id}')">Approve</button>
+                                                            <button class="btn btn-sm" style="background: var(--destructive); color: white; padding: 6px 12px; font-size: 12px;" onclick="showRejectModal('${req.id}')">Reject</button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            `;
+                                        }).join('');
+                                    }).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function approveRequest(requestId) {
+            if (!confirm('Approve this access request? This will create an approved request that awaits provisioning by the system owner.')) {
+                return;
+            }
+
+            try {
+                const token = localStorage.getItem('authToken');
+                const response = await fetch(`${API_BASE}/api/v1/access-requests/${requestId}/approve`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    const error = await response.json().catch(() => ({}));
+                    throw new Error(error.message || 'Failed to approve request');
+                }
+
+                alert('Request approved successfully!');
+                if (currentView === 'my-access') {
+                    const html = await loadMyAccessView();
+                    document.getElementById('view-container').innerHTML = html;
+                } else {
+                    loadApprovalsView().then(html => {
+                        document.getElementById('view-container').innerHTML = html;
+                    });
+                    updateApprovalsBadge();
+                }
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+                console.error('Approve error:', error);
+            }
+        }
+
+        function showRejectModal(requestId) {
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center;';
+            modal.innerHTML = `
+                <div class="modal-content" style="background: var(--card); border-radius: 8px; padding: 24px; width: 90%; max-width: 500px;">
+                    <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 16px;">Reject Request</h3>
+                    <form id="reject-form" onsubmit="handleReject(event, '${requestId}')">
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Reason for rejection *</label>
+                            <textarea id="reject-reason" class="input" required rows="4" placeholder="Please provide a reason for rejection..."></textarea>
+                        </div>
+                        <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                            <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancel</button>
+                            <button type="submit" class="btn" style="background: var(--destructive); color: white;">Reject Request</button>
+                        </div>
+                    </form>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        async function handleReject(event, requestId) {
+            event.preventDefault();
+            const reason = document.getElementById('reject-reason').value;
+            if (!reason.trim()) {
+                alert('Please provide a reason for rejection');
+                return;
+            }
+
+            try {
+                const token = localStorage.getItem('authToken');
+                const response = await fetch(`${API_BASE}/api/v1/access-requests/${requestId}/reject`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ reason })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json().catch(() => ({}));
+                    throw new Error(error.message || 'Failed to reject request');
+                }
+
+                event.target.closest('.modal').remove();
+                alert('Request rejected successfully');
+                loadApprovalsView().then(html => {
+                    document.getElementById('view-container').innerHTML = html;
+                });
+                updateApprovalsBadge();
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+                console.error('Reject error:', error);
+            }
+        }
+
+        async function updateApprovalsBadge() {
+            try {
+                const token = localStorage.getItem('authToken');
+                const response = await fetch(`${API_BASE}/api/v1/access-requests/pending`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    const requests = data.data || data || [];
+                    const badge = document.getElementById('approvals-badge');
+                    if (badge) {
+                        if (requests.length > 0) {
+                            badge.textContent = requests.length.toString();
+                            badge.style.display = 'block';
+                        } else {
+                            badge.style.display = 'none';
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error updating approvals badge:', error);
+            }
+        }
+
+        async function loadProvisioningView() {
+            const container = document.getElementById('view-container');
+            container.innerHTML = '<div class="card"><p>Loading pending provisioning...</p></div>';
+            
+            try {
+                const token = localStorage.getItem('authToken');
+                const headers = {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                };
+
+                const response = await fetch(`${API_BASE}/api/v1/access-requests/pending-provisioning`, { headers });
+                if (!response.ok) {
+                    throw new Error(`Failed to load provisioning: ${response.statusText}`);
+                }
+                const data = await response.json();
+                const items = data.data || data || [];
+
+                // Update badge
+                const badge = document.getElementById('provisioning-badge');
+                if (badge) {
+                    if (items.length > 0) {
+                        badge.textContent = items.length.toString();
+                        badge.style.display = 'block';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                }
+
+                return renderProvisioningView(items);
+            } catch (error) {
+                console.error('Error loading provisioning:', error);
+                return `<div class="card">Error loading provisioning: ${error.message}</div>`;
+            }
+        }
+
+        function renderProvisioningView(items) {
+            if (items.length === 0) {
+                return `
+                    <div class="card">
+                        <div style="text-align: center; padding: 40px;">
+                            <svg width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin: 0 auto 16px; color: var(--muted-foreground);">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                            </svg>
+                            <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">No Pending Provisioning</h3>
+                            <p style="color: var(--muted-foreground);">All approved requests have been provisioned.</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            return `
+                <div>
+                    <div class="card" style="margin-bottom: 24px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h2 style="font-size: 20px; font-weight: 600; margin-bottom: 4px;">Pending Provisioning</h2>
+                                <p style="color: var(--muted-foreground); font-size: 14px;">${items.length} approved request item(s) awaiting provisioning</p>
+                            </div>
+                            <button class="btn btn-primary" onclick="bulkProvision()">Bulk Provision Selected</button>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div style="overflow-x: auto;">
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <thead>
+                                    <tr style="border-bottom: 2px solid var(--border);">
+                                        <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 12px; text-transform: uppercase; color: var(--muted-foreground);">
+                                            <input type="checkbox" id="select-all-provision" onchange="toggleAllProvision(this)">
+                                        </th>
+                                        <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 12px; text-transform: uppercase; color: var(--muted-foreground);">User</th>
+                                        <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 12px; text-transform: uppercase; color: var(--muted-foreground);">System</th>
+                                        <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 12px; text-transform: uppercase; color: var(--muted-foreground);">Instance</th>
+                                        <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 12px; text-transform: uppercase; color: var(--muted-foreground);">Tier</th>
+                                        <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 12px; text-transform: uppercase; color: var(--muted-foreground);">Approved Date</th>
+                                        <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 12px; text-transform: uppercase; color: var(--muted-foreground);">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${items.map(item => {
+                                        const userName = item.accessRequest?.targetUser?.name || 'Unknown';
+                                        const systemName = item.systemInstance?.system?.name || 'Unknown';
+                                        const instanceName = item.systemInstance?.name || 'Unknown';
+                                        const tierName = item.accessTier?.name || 'Unknown';
+                                        const approvedDate = new Date(item.updatedAt || Date.now()).toLocaleDateString();
+                                        
+                                        return `
+                                            <tr style="border-bottom: 1px solid var(--border);">
+                                                <td style="padding: 12px;">
+                                                    <input type="checkbox" class="provision-checkbox" value="${item.id}">
+                                                </td>
+                                                <td style="padding: 12px;">${userName}</td>
+                                                <td style="padding: 12px;">${systemName}</td>
+                                                <td style="padding: 12px;">${instanceName}</td>
+                                                <td style="padding: 12px;">${tierName}</td>
+                                                <td style="padding: 12px;">${approvedDate}</td>
+                                                <td style="padding: 12px;">
+                                                    <button class="btn btn-sm btn-primary" onclick="provisionItem('${item.id}')">Provision</button>
+                                                    <button class="btn btn-sm" style="background: var(--destructive); color: white; margin-left: 8px;" onclick="rejectProvisionItem('${item.accessRequest?.id}', '${item.id}')">Reject</button>
+                                                </td>
+                                            </tr>
+                                        `;
+                                    }).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function toggleAllProvision(checkbox) {
+            document.querySelectorAll('.provision-checkbox').forEach(cb => {
+                cb.checked = checkbox.checked;
+            });
+        }
+
+        async function provisionItem(itemId) {
+            if (!confirm('Provision this access request? This will create an active grant.')) {
+                return;
+            }
+
+            try {
+                const token = localStorage.getItem('authToken');
+                const response = await fetch(`${API_BASE}/api/v1/access-requests/items/${itemId}/provision`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    const error = await response.json().catch(() => ({}));
+                    throw new Error(error.message || 'Failed to provision item');
+                }
+
+                alert('Access provisioned successfully!');
+                loadProvisioningView().then(html => {
+                    document.getElementById('view-container').innerHTML = html;
+                });
+                updateProvisioningBadge();
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+                console.error('Provision error:', error);
+            }
+        }
+
+        async function rejectProvisionItem(requestId, itemId) {
+            const reason = prompt('Please provide a reason for rejecting this approved item:');
+            if (!reason || reason.trim() === '') {
+                alert('A reason is required to reject an item');
+                return;
+            }
+
+            if (!confirm(`Reject this approved access request item? This will mark it as rejected.`)) {
+                return;
+            }
+
+            try {
+                const token = localStorage.getItem('authToken');
+                const response = await fetch(`${API_BASE}/api/v1/access-requests/${requestId}/items/${itemId}/reject`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ note: reason })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json().catch(() => ({}));
+                    throw new Error(error.message || 'Failed to reject item');
+                }
+
+                alert('Item rejected successfully!');
+                loadProvisioningView().then(html => {
+                    document.getElementById('view-container').innerHTML = html;
+                });
+                updateProvisioningBadge();
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+                console.error('Reject error:', error);
+            }
+        }
+
+        async function bulkProvision() {
+            const selected = Array.from(document.querySelectorAll('.provision-checkbox:checked')).map(cb => cb.value);
+            if (selected.length === 0) {
+                alert('Please select at least one item to provision');
+                return;
+            }
+
+            if (!confirm(`Provision ${selected.length} access request item(s)?`)) {
+                return;
+            }
+
+            try {
+                const token = localStorage.getItem('authToken');
+                const response = await fetch(`${API_BASE}/api/v1/access-requests/bulk-provision`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ itemIds: selected })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json().catch(() => ({}));
+                    throw new Error(error.message || 'Failed to bulk provision');
+                }
+
+                const result = await response.json();
+                alert(`Successfully provisioned ${result.successful?.length || 0} item(s). ${result.failed?.length || 0} failed.`);
+                loadProvisioningView().then(html => {
+                    document.getElementById('view-container').innerHTML = html;
+                });
+                updateProvisioningBadge();
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+                console.error('Bulk provision error:', error);
+            }
+        }
+
+        async function updateProvisioningBadge() {
+            try {
+                const token = localStorage.getItem('authToken');
+                const response = await fetch(`${API_BASE}/api/v1/access-requests/pending-provisioning`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    const items = data.data || data || [];
+                    const badge = document.getElementById('provisioning-badge');
+                    if (badge) {
+                        if (items.length > 0) {
+                            badge.textContent = items.length.toString();
+                            badge.style.display = 'block';
+                        } else {
+                            badge.style.display = 'none';
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error updating provisioning badge:', error);
+            }
+        }
+
+        async function loadRemovalView() {
+            const container = document.getElementById('view-container');
+            container.innerHTML = '<div class="card"><p>Loading pending removals...</p></div>';
+            
+            try {
+                const token = localStorage.getItem('authToken');
+                const headers = {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                };
+
+                const response = await fetch(`${API_BASE}/api/v1/access-grants/pending-removal`, { headers });
+                if (!response.ok) {
+                    throw new Error(`Failed to load removals: ${response.statusText}`);
+                }
+                const data = await response.json();
+                const grants = Array.isArray(data) ? data : (data.data || []);
+
+                // Update badge
+                const badge = document.getElementById('removal-badge');
+                if (badge) {
+                    if (grants.length > 0) {
+                        badge.textContent = grants.length.toString();
+                        badge.style.display = 'block';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                }
+
+                return renderRemovalView(grants);
+            } catch (error) {
+                console.error('Error loading removals:', error);
+                return `<div class="card">Error loading removals: ${error.message}</div>`;
+            }
+        }
+
+        function renderRemovalView(grants) {
+            if (grants.length === 0) {
+                return `
+                    <div class="card">
+                        <div style="text-align: center; padding: 40px;">
+                            <svg width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin: 0 auto 16px; color: var(--muted-foreground);">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                            </svg>
+                            <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">No Pending Removals</h3>
+                            <p style="color: var(--muted-foreground);">No access grants are marked for removal.</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            return `
+                <div>
+                    <div class="card" style="margin-bottom: 24px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h2 style="font-size: 20px; font-weight: 600; margin-bottom: 4px;">Pending Removal</h2>
+                                <p style="color: var(--muted-foreground); font-size: 14px;">${grants.length} grant(s) marked for removal</p>
+                            </div>
+                            <button class="btn btn-primary" onclick="bulkMarkRemoved()">Bulk Confirm Removed</button>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div style="overflow-x: auto;">
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <thead>
+                                    <tr style="border-bottom: 2px solid var(--border);">
+                                        <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 12px; text-transform: uppercase; color: var(--muted-foreground);">
+                                            <input type="checkbox" id="select-all-removal" onchange="toggleAllRemoval(this)">
+                                        </th>
+                                        <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 12px; text-transform: uppercase; color: var(--muted-foreground);">User</th>
+                                        <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 12px; text-transform: uppercase; color: var(--muted-foreground);">System</th>
+                                        <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 12px; text-transform: uppercase; color: var(--muted-foreground);">Instance</th>
+                                        <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 12px; text-transform: uppercase; color: var(--muted-foreground);">Tier</th>
+                                        <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 12px; text-transform: uppercase; color: var(--muted-foreground);">Marked Date</th>
+                                        <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 12px; text-transform: uppercase; color: var(--muted-foreground);">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${grants.map(grant => {
+                                        const userName = grant.user?.name || 'Unknown';
+                                        const systemName = grant.systemInstance?.system?.name || 'Unknown';
+                                        const instanceName = grant.systemInstance?.name || 'Unknown';
+                                        const tierName = grant.accessTier?.name || 'Unknown';
+                                        const markedDate = new Date(grant.updatedAt || Date.now()).toLocaleDateString();
+                                        
+                                        return `
+                                            <tr style="border-bottom: 1px solid var(--border);">
+                                                <td style="padding: 12px;">
+                                                    <input type="checkbox" class="removal-checkbox" value="${grant.id}">
+                                                </td>
+                                                <td style="padding: 12px;">${userName}</td>
+                                                <td style="padding: 12px;">${systemName}</td>
+                                                <td style="padding: 12px;">${instanceName}</td>
+                                                <td style="padding: 12px;">${tierName}</td>
+                                                <td style="padding: 12px;">${markedDate}</td>
+                                                <td style="padding: 12px;">
+                                                    <div style="display: flex; gap: 8px;">
+                                                        <button class="btn btn-sm btn-primary" onclick="markRemoved('${grant.id}')">Confirm Removed</button>
+                                                        <button class="btn btn-sm btn-secondary" onclick="cancelRemoval('${grant.id}')">Cancel</button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        `;
+                                    }).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function toggleAllRemoval(checkbox) {
+            document.querySelectorAll('.removal-checkbox').forEach(cb => {
+                cb.checked = checkbox.checked;
+            });
+        }
+
+        async function markRemoved(grantId) {
+            if (!confirm('Mark this grant as removed? This will finalize the removal.')) {
+                return;
+            }
+
+            try {
+                const token = localStorage.getItem('authToken');
+                const response = await fetch(`${API_BASE}/api/v1/access-grants/${grantId}/remove`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    const error = await response.json().catch(() => ({}));
+                    throw new Error(error.message || 'Failed to mark as removed');
+                }
+
+                alert('Grant marked as removed successfully!');
+                loadRemovalView().then(html => {
+                    document.getElementById('view-container').innerHTML = html;
+                });
+                updateRemovalBadge();
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+                console.error('Mark removed error:', error);
+            }
+        }
+
+        async function cancelRemoval(grantId) {
+            if (!confirm('Cancel removal for this grant? The grant will return to active status.')) {
+                return;
+            }
+
+            try {
+                const token = localStorage.getItem('authToken');
+                const response = await fetch(`${API_BASE}/api/v1/access-grants/${grantId}/cancel-removal`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    const error = await response.json().catch(() => ({}));
+                    throw new Error(error.message || 'Failed to cancel removal');
+                }
+
+                alert('Removal cancelled successfully!');
+                loadRemovalView().then(html => {
+                    document.getElementById('view-container').innerHTML = html;
+                });
+                updateRemovalBadge();
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+                console.error('Cancel removal error:', error);
+            }
+        }
+
+        async function bulkMarkRemoved() {
+            const selected = Array.from(document.querySelectorAll('.removal-checkbox:checked')).map(cb => cb.value);
+            if (selected.length === 0) {
+                alert('Please select at least one grant to mark as removed');
+                return;
+            }
+
+            if (!confirm(`Mark ${selected.length} grant(s) as removed?`)) {
+                return;
+            }
+
+            try {
+                const token = localStorage.getItem('authToken');
+                const response = await fetch(`${API_BASE}/api/v1/access-grants/bulk-remove`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ grantIds: selected })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json().catch(() => ({}));
+                    throw new Error(error.message || 'Failed to bulk mark as removed');
+                }
+
+                const result = await response.json();
+                alert(`Successfully marked ${result.successful?.length || 0} grant(s) as removed. ${result.failed?.length || 0} failed.`);
+                loadRemovalView().then(html => {
+                    document.getElementById('view-container').innerHTML = html;
+                });
+                updateRemovalBadge();
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+                console.error('Bulk mark removed error:', error);
+            }
+        }
+
+        async function updateRemovalBadge() {
+            try {
+                const token = localStorage.getItem('authToken');
+                const response = await fetch(`${API_BASE}/api/v1/access-grants/pending-removal`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    const grants = Array.isArray(data) ? data : (data.data || []);
+                    const badge = document.getElementById('removal-badge');
+                    if (badge) {
+                        if (grants.length > 0) {
+                            badge.textContent = grants.length.toString();
+                            badge.style.display = 'block';
+                        } else {
+                            badge.style.display = 'none';
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error updating removal badge:', error);
+            }
+        }
+
     </script>
 </body>
 </html>

@@ -13,7 +13,9 @@ import {
   UseInterceptors,
   UploadedFile,
   BadRequestException,
+  UnauthorizedException,
   Res,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Express } from 'express';
@@ -23,6 +25,7 @@ import { CsvParserService } from '../services/csv-parser.service';
 import { CreateAccessGrantDto } from '../dto/create-access-grant.dto';
 import { UpdateAccessGrantStatusDto } from '../dto/update-access-grant-status.dto';
 import { BulkCreateAccessGrantsDto } from '../dto/bulk-create-access-grants.dto';
+import { BulkRemoveDto } from '../dto/bulk-remove.dto';
 import { SystemOwner } from '../../common/decorators/system-owner.decorator';
 import { AuthService } from '../../auth/auth.service';
 import { User } from '../../identity/entities/user.entity';
@@ -219,6 +222,151 @@ export class AccessGrantsController {
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', 'attachment; filename="access-grants-template.csv"');
     res.send(csvContent);
+  }
+
+  /**
+   * PHASE2-005: Mark grant for removal
+   */
+  @Patch(':id/to-remove')
+  @SystemOwner()
+  async markToRemove(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Headers('authorization') authHeader?: string,
+  ) {
+    if (!authHeader) {
+      throw new UnauthorizedException('Missing authorization header');
+    }
+    const token = authHeader.replace(/^Bearer\s+/i, '');
+    const userInfo = await this.authService.me(token);
+    const owner = await this.userRepository.findOne({
+      where: { email: userInfo.email.toLowerCase() },
+    });
+    if (!owner) {
+      throw new UnauthorizedException('Owner not found');
+    }
+
+    return this.accessGrantService.markToRemove(id, owner.id);
+  }
+
+  /**
+   * PHASE2-005: Mark grant as removed
+   */
+  @Patch(':id/remove')
+  @SystemOwner()
+  async markRemoved(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Headers('authorization') authHeader?: string,
+  ) {
+    if (!authHeader) {
+      throw new UnauthorizedException('Missing authorization header');
+    }
+    const token = authHeader.replace(/^Bearer\s+/i, '');
+    const userInfo = await this.authService.me(token);
+    const owner = await this.userRepository.findOne({
+      where: { email: userInfo.email.toLowerCase() },
+    });
+    if (!owner) {
+      throw new UnauthorizedException('Owner not found');
+    }
+
+    return this.accessGrantService.markRemoved(id, owner.id);
+  }
+
+  /**
+   * PHASE2-005: Cancel pending removal
+   */
+  @Patch(':id/cancel-removal')
+  @SystemOwner()
+  async cancelRemoval(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Headers('authorization') authHeader?: string,
+  ) {
+    if (!authHeader) {
+      throw new UnauthorizedException('Missing authorization header');
+    }
+    const token = authHeader.replace(/^Bearer\s+/i, '');
+    const userInfo = await this.authService.me(token);
+    const owner = await this.userRepository.findOne({
+      where: { email: userInfo.email.toLowerCase() },
+    });
+    if (!owner) {
+      throw new UnauthorizedException('Owner not found');
+    }
+
+    return this.accessGrantService.cancelRemoval(id, owner.id);
+  }
+
+  /**
+   * PHASE2-005: Get grants pending removal
+   */
+  @Get('pending-removal')
+  async getPendingRemoval(
+    @Headers('authorization') authHeader?: string,
+  ) {
+    if (!authHeader) {
+      throw new UnauthorizedException('Missing authorization header');
+    }
+    const token = authHeader.replace(/^Bearer\s+/i, '');
+    const userInfo = await this.authService.me(token);
+    const owner = await this.userRepository.findOne({
+      where: { email: userInfo.email.toLowerCase() },
+    });
+    if (!owner) {
+      throw new UnauthorizedException('Owner not found');
+    }
+
+    const grants = await this.accessGrantService.findPendingRemoval(owner.id);
+    return { data: grants };
+  }
+
+  /**
+   * PHASE2-005: Bulk mark grants for removal
+   */
+  @Post('bulk-to-remove')
+  @SystemOwner()
+  @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
+  async bulkMarkToRemove(
+    @Body() dto: BulkRemoveDto,
+    @Headers('authorization') authHeader?: string,
+  ) {
+    if (!authHeader) {
+      throw new UnauthorizedException('Missing authorization header');
+    }
+    const token = authHeader.replace(/^Bearer\s+/i, '');
+    const userInfo = await this.authService.me(token);
+    const owner = await this.userRepository.findOne({
+      where: { email: userInfo.email.toLowerCase() },
+    });
+    if (!owner) {
+      throw new UnauthorizedException('Owner not found');
+    }
+
+    return this.accessGrantService.bulkMarkToRemove(dto.grantIds, owner.id);
+  }
+
+  /**
+   * PHASE2-005: Bulk mark grants as removed
+   */
+  @Post('bulk-remove')
+  @SystemOwner()
+  @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
+  async bulkMarkRemoved(
+    @Body() dto: BulkRemoveDto,
+    @Headers('authorization') authHeader?: string,
+  ) {
+    if (!authHeader) {
+      throw new UnauthorizedException('Missing authorization header');
+    }
+    const token = authHeader.replace(/^Bearer\s+/i, '');
+    const userInfo = await this.authService.me(token);
+    const owner = await this.userRepository.findOne({
+      where: { email: userInfo.email.toLowerCase() },
+    });
+    if (!owner) {
+      throw new UnauthorizedException('Owner not found');
+    }
+
+    return this.accessGrantService.bulkMarkRemoved(dto.grantIds, owner.id);
   }
 }
 

@@ -12,6 +12,7 @@ import { SystemsModule } from './systems/systems.module';
 import { AccessControlModule } from './access-control/access-control.module';
 import { OwnershipModule } from './ownership/ownership.module';
 import { AuthModule } from './auth/auth.module';
+import { IntegrationsModule } from './integrations/integrations.module';
 import { AccessRequest, AccessRequestItem } from './access-control/entities/access-request.entity';
 
 @Module({
@@ -44,6 +45,7 @@ import { AccessRequest, AccessRequestItem } from './access-control/entities/acce
     AccessControlModule,
     OwnershipModule,
     AuthModule,
+    IntegrationsModule,
   ],
   controllers: [],
   providers: [],
