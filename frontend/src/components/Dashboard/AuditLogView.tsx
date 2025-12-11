@@ -252,6 +252,9 @@ export default function AuditLogView() {
                       )}
                       {log.details && (
                         <p className="text-white/40 text-xs">
+                          {log.details.systemName && `${log.details.systemName}`}
+                          {log.details.instanceName && ` • ${log.details.instanceName}`}
+                          {log.details.tierName && ` • ${log.details.tierName}`}
                           {log.details.systems?.length > 0 && `Systems: ${log.details.systems.join(', ')}`}
                           {log.details.itemCount && ` • ${log.details.itemCount} item(s)`}
                         </p>
