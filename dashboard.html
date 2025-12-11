@@ -235,6 +235,87 @@
         .sidebar.collapsed .nav-item {
             justify-content: center;
         }
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .toast {
+            min-width: 300px;
+            max-width: 400px;
+            padding: 16px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            animation: slideIn 0.3s ease-out;
+        }
+        .toast.success {
+            border-left: 4px solid #22c55e;
+        }
+        .toast.error {
+            border-left: 4px solid var(--destructive);
+        }
+        .toast.info {
+            border-left: 4px solid var(--accent);
+        }
+        .toast-icon {
+            flex-shrink: 0;
+            width: 20px;
+            height: 20px;
+        }
+        .toast-icon.success {
+            color: #22c55e;
+        }
+        .toast-icon.error {
+            color: var(--destructive);
+        }
+        .toast-icon.info {
+            color: var(--accent);
+        }
+        .toast-content {
+            flex: 1;
+        }
+        .toast-title {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+        .toast-message {
+            font-size: 13px;
+            color: var(--muted-foreground);
+        }
+        .toast-close {
+            flex-shrink: 0;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            color: var(--muted-foreground);
+            width: 16px;
+            height: 16px;
+        }
+        .toast-close:hover {
+            color: var(--foreground);
+        }
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
         /* View Styles */
         .card {
             background: var(--card);
@@ -793,6 +874,9 @@
     </style>
 </head>
 <body>
+    <!-- Toast Notification Container -->
+    <div class="toast-container" id="toast-container"></div>
+
     <div class="app-container">
         <!-- Sidebar -->
         <aside class="sidebar" id="sidebar">
@@ -910,6 +994,49 @@
         let currentView = 'users';
         let sidebarOpen = true;
 
+        // Toast Notification System
+        function showToast(title, message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toastId = 'toast-' + Date.now();
+
+            const icons = {
+                success: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>',
+                error: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>',
+                info: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>'
+            };
+
+            const toast = document.createElement('div');
+            toast.id = toastId;
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <div class="toast-icon ${type}">
+                    ${icons[type] || icons.info}
+                </div>
+                <div class="toast-content">
+                    <div class="toast-title">${title}</div>
+                    ${message ? `<div class="toast-message">${message}</div>` : ''}
+                </div>
+                <button class="toast-close" onclick="closeToast('${toastId}')">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            `;
+
+            container.appendChild(toast);
+
+            // Auto-remove after 5 seconds
+            setTimeout(() => closeToast(toastId), 5000);
+        }
+
+        function closeToast(toastId) {
+            const toast = document.getElementById(toastId);
+            if (toast) {
+                toast.style.animation = 'slideIn 0.3s ease-out reverse';
+                setTimeout(() => toast.remove(), 300);
+            }
+        }
+
         // Check authentication
         window.addEventListener('DOMContentLoaded', async () => {
             const token = localStorage.getItem('authToken');
@@ -924,18 +1051,20 @@
             document.getElementById('user-name').textContent = currentUser.name || currentUser.email;
             document.getElementById('user-role').textContent = currentUser.role || 'user';
             
-            // If user ID is missing, fetch it from auth/me
-            if (!currentUser.id) {
-                try {
-                    const meResp = await fetch(`${API_BASE}/api/v1/auth/me`, {
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    });
-                    const meData = await meResp.json();
-                    currentUser.id = meData.id;
-                    localStorage.setItem('currentUser', JSON.stringify(currentUser));
-                } catch (error) {
-                    console.error('Failed to fetch user ID:', error);
-                }
+            // ALWAYS fetch user info from auth/me to ensure we have latest data including ID
+            try {
+                const meResp = await fetch(`${API_BASE}/api/v1/auth/me`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const meData = await meResp.json();
+                currentUser.id = meData.id;
+                currentUser.role = meData.role || currentUser.role || 'user';
+                currentUser.email = meData.email || currentUser.email;
+                currentUser.name = meData.name || currentUser.name;
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                console.log('[Dashboard] Updated currentUser:', currentUser);
+            } catch (error) {
+                console.error('[Dashboard] Failed to fetch user info:', error);
             }
             
             // Show/hide nav items based on role
@@ -953,15 +1082,15 @@
                     const usersData = await usersResponse.json();
                     const users = usersData.data || usersData || [];
                     // User is a manager if someone OTHER than themselves has them as manager
-                    isManager = users.some(u => u.managerId === currentUser.id && u.id !== currentUser.id);
+                    const currentUserId = currentUser.id;
+                    isManager = currentUserId && users.some(u => u.managerId === currentUserId && u.id !== currentUserId);
+                    console.log('[Dashboard] Manager check:', { currentUserId, isManager, managedUsers: users.filter(u => u.managerId === currentUserId && u.id !== currentUserId).map(u => u.email) });
                 }
-            } catch {
+            } catch (err) {
+                console.error('[Dashboard] Error checking manager status:', err);
                 isManager = false;
             }
             
-            // Remove Pending Approvals from sidebar for everyone; managers will see approvals inside My Access
-            document.getElementById('nav-approvals').style.display = 'none';
-
             if (isOwner) {
                 document.getElementById('nav-users').style.display = 'flex';
                 // Removed nav-requests - requests shown in "my-access"
@@ -971,21 +1100,25 @@
                 document.getElementById('nav-log').style.display = 'flex';
                 document.getElementById('nav-audit').style.display = 'flex';
                 document.getElementById('nav-my-access').style.display = 'flex';
+                document.getElementById('nav-approvals').style.display = 'none'; // Owners don't need approvals tab
                 loadView('users');
                 updateProvisioningBadge();
                 updateRemovalBadge();
             } else if (isManager) {
                 document.getElementById('nav-my-access').style.display = 'flex';
+                document.getElementById('nav-approvals').style.display = 'flex'; // Show approvals for managers
                 document.getElementById('nav-users').style.display = 'none';
                 document.getElementById('nav-provisioning').style.display = 'none';
                 document.getElementById('nav-removal').style.display = 'none';
                 document.getElementById('nav-overview').style.display = 'none';
                 document.getElementById('nav-log').style.display = 'none';
                 document.getElementById('nav-audit').style.display = 'none';
+                updateApprovalsBadge(); // Update badge for managers
                 loadView('my-access');
             } else {
                 // Regular user - hide all admin/manager tabs
                 document.getElementById('nav-users').style.display = 'none';
+                document.getElementById('nav-approvals').style.display = 'none';
                 document.getElementById('nav-provisioning').style.display = 'none';
                 document.getElementById('nav-removal').style.display = 'none';
                 document.getElementById('nav-overview').style.display = 'none';
@@ -993,6 +1126,26 @@
                 document.getElementById('nav-audit').style.display = 'none';
                 document.getElementById('nav-my-access').style.display = 'flex';
                 loadView('my-access');
+            }
+
+            // Handle hash navigation (e.g., from Slack deep links)
+            const hash = window.location.hash.replace('#', '');
+            console.log('[Dashboard] Hash navigation check:', { hash, currentView, isOwner, isManager });
+            if (hash && hash !== currentView) {
+                // Valid views based on role
+                const validViews = isOwner
+                    ? ['users', 'provisioning', 'removal', 'overview', 'log', 'audit', 'my-access']
+                    : isManager
+                        ? ['my-access', 'approvals']
+                        : ['my-access'];
+
+                console.log('[Dashboard] Valid views for user:', validViews);
+                if (validViews.includes(hash)) {
+                    console.log('[Dashboard] Switching to hash view:', hash);
+                    switchView(hash);
+                } else {
+                    console.log('[Dashboard] Hash not in valid views, ignoring');
+                }
             }
         });
 
@@ -1227,7 +1380,8 @@
                 </div>
             </div>
 
-            <!-- Access Requests Section -->
+            <!-- Access Requests Section - HIDE for managers, they use the Approvals tab -->
+            ${isManager !== true ? `
             <div>
                 <div class="section-header">
                     <div class="section-header-icon">
@@ -1255,72 +1409,6 @@
                 </div>
                 <div id="my-requests-list">
                     ${renderMyRequestsList()}
-                </div>
-            </div>
-
-            ${isManager === true && Array.isArray(pendingManagerApprovals) && pendingManagerApprovals.length > 0 ? `
-            <!-- Manager Approvals Inline - ONLY show for managers -->
-            <div style="margin-top: 32px;">
-                <div class="section-header">
-                    <div class="section-header-icon">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                    </div>
-                    <div class="section-header-text">
-                        <h2>Team Pending Approvals</h2>
-                        <p>Requests awaiting your approval as manager</p>
-                    </div>
-                    <span class="section-count">${pendingManagerApprovals.length}</span>
-                </div>
-                <div class="card">
-                    <div style="overflow-x: auto;">
-                        <table style="width: 100%; border-collapse: collapse;">
-                            <thead>
-                                <tr style="border-bottom: 2px solid var(--border);">
-                                    <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 12px; text-transform: uppercase; color: var(--muted-foreground);">Requester</th>
-                                    <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 12px; text-transform: uppercase; color: var(--muted-foreground);">For User</th>
-                                    <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 12px; text-transform: uppercase; color: var(--muted-foreground);">System</th>
-                                    <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 12px; text-transform: uppercase; color: var(--muted-foreground);">Instance</th>
-                                    <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 12px; text-transform: uppercase; color: var(--muted-foreground);">Tier</th>
-                                    <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 12px; text-transform: uppercase; color: var(--muted-foreground);">Justification</th>
-                                    <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 12px; text-transform: uppercase; color: var(--muted-foreground);">Requested</th>
-                                    <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 12px; text-transform: uppercase; color: var(--muted-foreground);">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${pendingManagerApprovals.map(req => {
-                                    const items = req.items || [];
-                                    return items.map(item => {
-                                        const requesterName = req.requester?.name || req.requesterId || 'Unknown';
-                                        const targetUserName = req.targetUser?.name || req.targetUserId || 'Unknown';
-                                        const systemName = item.systemInstance?.system?.name || 'Unknown';
-                                        const instanceName = item.systemInstance?.name || 'Unknown';
-                                        const tierName = item.accessTier?.name || 'Unknown';
-                                        const justification = req.note || item.note || '-';
-                                        const requestedDate = new Date(req.createdAt || Date.now()).toLocaleDateString();
-                                        return `
-                                            <tr style="border-bottom: 1px solid var(--border);">
-                                                <td style="padding: 12px;">${requesterName}</td>
-                                                <td style="padding: 12px;">${targetUserName}</td>
-                                                <td style="padding: 12px;">${systemName}</td>
-                                                <td style="padding: 12px;">${instanceName}</td>
-                                                <td style="padding: 12px;">${tierName}</td>
-                                                <td style="padding: 12px; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${justification}">${justification}</td>
-                                                <td style="padding: 12px;">${requestedDate}</td>
-                                                <td style="padding: 12px;">
-                                                    <div style="display: flex; gap: 8px;">
-                                                        <button class="btn btn-sm" style="background: #22c55e; color: white; padding: 6px 12px; font-size: 12px;" onclick="approveRequest('${req.id}')">Approve</button>
-                                                        <button class="btn btn-sm" style="background: var(--destructive); color: white; padding: 6px 12px; font-size: 12px;" onclick="showRejectModal('${req.id}')">Reject</button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        `;
-                                    }).join('');
-                                }).join('')}
-                            </tbody>
-                        </table>
-                    </div>
                 </div>
             </div>
             ` : ''}
@@ -1781,14 +1869,15 @@
                 }
 
                 const result = await response.json();
-                
+
                 // Show success message with status
                 const status = result.status || 'requested';
-                const message = status === 'approved' 
-                    ? 'Request auto-approved! Awaiting provisioning.' 
-                    : 'Request submitted! Awaiting manager approval.';
-                
-                alert(message);
+                const title = status === 'approved' ? 'Request Auto-Approved!' : 'Request Submitted!';
+                const message = status === 'approved'
+                    ? 'Your request has been auto-approved and is awaiting provisioning by the system owner.'
+                    : 'Your request has been submitted and is awaiting manager approval.';
+
+                showToast(title, message, 'success');
 
                 // Close modal and reload view
                 form.closest('.modal').remove();
@@ -4394,7 +4483,7 @@
                     throw new Error(error.message || 'Failed to approve request');
                 }
 
-                alert('Request approved successfully!');
+                showToast('Request Approved', 'The access request has been approved. The requester has been notified.', 'success');
                 if (currentView === 'my-access') {
                     const html = await loadMyAccessView();
                     document.getElementById('view-container').innerHTML = html;
@@ -4405,7 +4494,7 @@
                     updateApprovalsBadge();
                 }
             } catch (error) {
-                alert(`Error: ${error.message}`);
+                showToast('Error', error.message, 'error');
                 console.error('Approve error:', error);
             }
         }
@@ -4457,13 +4546,13 @@
                 }
 
                 event.target.closest('.modal').remove();
-                alert('Request rejected successfully');
+                showToast('Request Rejected', 'The access request has been rejected. The requester has been notified.', 'success');
                 loadApprovalsView().then(html => {
                     document.getElementById('view-container').innerHTML = html;
                 });
                 updateApprovalsBadge();
             } catch (error) {
-                alert(`Error: ${error.message}`);
+                showToast('Error', error.message, 'error');
                 console.error('Reject error:', error);
             }
         }
