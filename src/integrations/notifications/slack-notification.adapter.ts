@@ -10,6 +10,19 @@ export class SlackNotificationAdapter implements INotificationService {
   private readonly client: WebClient;
   private readonly userIdCache = new Map<string, string>();
 
+  /**
+   * HARDCODED EMAIL MAPPING: Portal Email → Slack Email
+   * This is a temporary solution until we add a slackEmail field to the User entity.
+   *
+   * Maps portal login emails to their corresponding Slack account emails.
+   */
+  private readonly slackEmailMapping: Record<string, string> = {
+    // Gerald Sadya: portal=geralds@silvertreebrands.com, slack=sadyageraldm@gmail.com
+    'geralds@silvertreebrands.com': 'sadyageraldm@gmail.com',
+    // John Smith (System Owner): portal=john.smith@silvertreebrands.com, slack=geralds@silvertreebrands.com
+    'john.smith@silvertreebrands.com': 'geralds@silvertreebrands.com',
+  };
+
   constructor(
     private configService: ConfigService,
     private systemOwnerService: SystemOwnerService,
@@ -19,6 +32,19 @@ export class SlackNotificationAdapter implements INotificationService {
       this.logger.warn('SLACK_BOT_TOKEN not configured. Slack notifications will fail.');
     }
     this.client = new WebClient(token);
+  }
+
+  /**
+   * Maps a portal email to its Slack email.
+   * Falls back to the original email if no mapping exists.
+   */
+  private getSlackEmail(portalEmail: string): string {
+    const mappedEmail = this.slackEmailMapping[portalEmail];
+    if (mappedEmail) {
+      this.logger.log(`[SlackNotificationAdapter] Mapped portal email ${portalEmail} → Slack email ${mappedEmail}`);
+      return mappedEmail;
+    }
+    return portalEmail;
   }
 
   async notifyManager(context: NotificationContext): Promise<void> {
@@ -137,9 +163,33 @@ export class SlackNotificationAdapter implements INotificationService {
         return;
       }
 
-      const actionText = action === 'approve'
-        ? 'needs provisioning'
-        : 'needs to be removed';
+      // Determine message content based on action
+      let actionText: string;
+      let headerEmoji: string;
+      let headerText: string;
+
+      switch (action) {
+        case 'request':
+          actionText = 'needs your review';
+          headerEmoji = '📋';
+          headerText = 'New Access Request';
+          break;
+        case 'approve':
+          actionText = 'needs provisioning';
+          headerEmoji = '✅';
+          headerText = 'Provision Access';
+          break;
+        case 'to_remove':
+        case 'remove':
+          actionText = 'needs to be removed';
+          headerEmoji = '🗑️';
+          headerText = 'Remove Access';
+          break;
+        default:
+          actionText = 'needs your attention';
+          headerEmoji = '📋';
+          headerText = 'Access Update';
+      }
 
       const systemName = firstItem.systemInstance?.system?.name || 'Unknown System';
 
@@ -158,7 +208,7 @@ export class SlackNotificationAdapter implements INotificationService {
               type: 'header',
               text: {
                 type: 'plain_text',
-                text: action === 'approve' ? '✅ Provision Access' : '🗑️ Remove Access',
+                text: `${headerEmoji} ${headerText}`,
               },
             },
             {
@@ -323,33 +373,36 @@ export class SlackNotificationAdapter implements INotificationService {
     }
   }
 
-  private async lookupSlackUser(email: string): Promise<string | null> {
-    if (this.userIdCache.has(email)) {
-      const cached = this.userIdCache.get(email);
-      this.logger.log(`Using cached Slack user ID for ${email}: ${cached}`);
+  private async lookupSlackUser(portalEmail: string): Promise<string | null> {
+    // Map portal email to Slack email
+    const slackEmail = this.getSlackEmail(portalEmail);
+
+    if (this.userIdCache.has(slackEmail)) {
+      const cached = this.userIdCache.get(slackEmail);
+      this.logger.log(`Using cached Slack user ID for ${slackEmail}: ${cached}`);
       return cached || null;
     }
 
     try {
-      this.logger.log(`Calling Slack API to lookup user by email: ${email}`);
-      const result = await this.client.users.lookupByEmail({ email });
-      
+      this.logger.log(`Calling Slack API to lookup user by email: ${slackEmail}`);
+      const result = await this.client.users.lookupByEmail({ email: slackEmail });
+
       if (!result.ok) {
-        this.logger.error(`Slack API returned error for ${email}: ${result.error || 'Unknown error'}`);
+        this.logger.error(`Slack API returned error for ${slackEmail}: ${result.error || 'Unknown error'}`);
         return null;
       }
 
       const userId = result.user?.id;
 
       if (userId) {
-        this.userIdCache.set(email, userId);
-        this.logger.log(`Successfully found Slack user ID ${userId} for email ${email}`);
+        this.userIdCache.set(slackEmail, userId);
+        this.logger.log(`Successfully found Slack user ID ${userId} for email ${slackEmail}`);
         return userId;
       } else {
-        this.logger.warn(`Slack API returned ok=true but no user ID for email: ${email}`);
+        this.logger.warn(`Slack API returned ok=true but no user ID for email: ${slackEmail}`);
       }
     } catch (error: any) {
-      this.logger.error(`Exception looking up Slack user for ${email}: ${error.message}`, error.stack);
+      this.logger.error(`Exception looking up Slack user for ${slackEmail}: ${error.message}`, error.stack);
       if (error.data) {
         this.logger.error(`Slack API error data: ${JSON.stringify(error.data)}`);
       }

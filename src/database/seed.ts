@@ -20,11 +20,11 @@ const seedUsers = [
 ];
 
 const seedSystems = [
-  { name: 'Magento', description: 'E-commerce platform for UCOOK, Faithful to Nature, and PetHeaven' },
+  { name: 'Magento', description: 'E-commerce platform' },
+  { name: 'Freshdesk', description: 'Customer support and ticketing system' },
   { name: 'Acumatica', description: 'ERP system for financial and inventory management' },
-  { name: 'Google Analytics', description: 'Web analytics and tracking platform' },
-  { name: 'Zoho People', description: 'HR management and employee database' },
-  { name: 'Shopify', description: 'E-commerce platform for SKOON and other brands' },
+  { name: 'n8n', description: 'Workflow automation platform' },
+  { name: 'Bitquery', description: 'Blockchain data and analytics' },
 ];
 
 export async function seedDatabase(dataSource: DataSource) {
@@ -329,27 +329,29 @@ export async function seedDatabase(dataSource: DataSource) {
   // Define instances per system (brand-specific)
   const systemInstances: Record<string, Array<{ name: string; region: string; environment?: string }>> = {
     'Magento': [
-      { name: 'UCOOK Production', region: 'ZA', environment: 'production' },
-      { name: 'Faithful to Nature Production', region: 'ZA', environment: 'production' },
-      { name: 'PetHeaven Production', region: 'ZA', environment: 'production' },
-      { name: 'UCOOK Staging', region: 'ZA', environment: 'staging' },
+      { name: 'Faithful to Nature', region: 'ZA', environment: 'production' },
+      { name: 'UCOOK', region: 'ZA', environment: 'production' },
+      { name: 'SKOON', region: 'ZA', environment: 'production' },
+    ],
+    'Freshdesk': [
+      { name: 'Faithful to Nature', region: 'ZA', environment: 'production' },
+      { name: 'UCOOK', region: 'ZA', environment: 'production' },
+      { name: 'SKOON', region: 'ZA', environment: 'production' },
     ],
     'Acumatica': [
-      { name: 'Production', region: 'ZA', environment: 'production' },
-      { name: 'Staging', region: 'ZA', environment: 'staging' },
-      { name: 'Development', region: 'ZA', environment: 'development' },
+      { name: 'Faithful to Nature', region: 'ZA', environment: 'production' },
+      { name: 'UCOOK', region: 'ZA', environment: 'production' },
+      { name: 'SKOON', region: 'ZA', environment: 'production' },
     ],
-    'Google Analytics': [
-      { name: 'Production', region: 'Global', environment: 'production' },
-      { name: 'Staging', region: 'Global', environment: 'staging' },
+    'n8n': [
+      { name: 'Faithful to Nature', region: 'ZA', environment: 'production' },
+      { name: 'UCOOK', region: 'ZA', environment: 'production' },
+      { name: 'SKOON', region: 'ZA', environment: 'production' },
     ],
-    'Zoho People': [
-      { name: 'Production', region: 'ZA', environment: 'production' },
-      { name: 'Staging', region: 'ZA', environment: 'staging' },
-    ],
-    'Shopify': [
-      { name: 'SKOON Production', region: 'ZA', environment: 'production' },
-      { name: 'SKOON Staging', region: 'ZA', environment: 'staging' },
+    'Bitquery': [
+      { name: 'Faithful to Nature', region: 'ZA', environment: 'production' },
+      { name: 'UCOOK', region: 'ZA', environment: 'production' },
+      { name: 'SKOON', region: 'ZA', environment: 'production' },
     ],
   };
   
@@ -385,35 +387,30 @@ export async function seedDatabase(dataSource: DataSource) {
   // Define access tiers per system (system-specific)
   const systemTiers: Record<string, Array<{ name: string; description: string }>> = {
     'Magento': [
-      { name: 'Viewer', description: 'Read-only access to products and orders' },
-      { name: 'Editor', description: 'Can edit products, manage inventory, and process orders' },
-      { name: 'Admin', description: 'Full administrative access including settings and user management' },
+      { name: 'Regular', description: 'Standard user access' },
+      { name: 'Admin', description: 'Full administrative access' },
+    ],
+    'Freshdesk': [
+      { name: 'Regular', description: 'Standard user access' },
+      { name: 'Admin', description: 'Full administrative access' },
     ],
     'Acumatica': [
-      { name: 'Viewer', description: 'Read-only access to financial reports and data' },
-      { name: 'Accountant', description: 'Can create and edit journal entries and financial transactions' },
-      { name: 'Admin', description: 'Full system administration including user management and configuration' },
+      { name: 'Regular', description: 'Standard user access' },
+      { name: 'Admin', description: 'Full administrative access' },
     ],
-    'Google Analytics': [
-      { name: 'Viewer', description: 'Read-only access to reports and dashboards' },
-      { name: 'Analyst', description: 'Can create custom reports and segments' },
-      { name: 'Admin', description: 'Full access including account management and user permissions' },
+    'n8n': [
+      { name: 'Regular', description: 'Standard user access' },
+      { name: 'Admin', description: 'Full administrative access' },
     ],
-    'Zoho People': [
-      { name: 'Employee', description: 'Standard employee access to own profile and leave requests' },
-      { name: 'Manager', description: 'Can view team members and approve leave requests' },
-      { name: 'HR Admin', description: 'Full HR administration including employee management and reporting' },
-    ],
-    'Shopify': [
-      { name: 'Viewer', description: 'Read-only access to store and products' },
-      { name: 'Staff', description: 'Can manage products, orders, and customers' },
-      { name: 'Admin', description: 'Full store administration including settings and apps' },
+    'Bitquery': [
+      { name: 'Regular', description: 'Standard user access' },
+      { name: 'Admin', description: 'Full administrative access' },
     ],
   };
   
   for (const system of systems) {
     const tierConfigs = systemTiers[system.name] || [
-      { name: 'Viewer', description: 'Read-only access' },
+      { name: 'Regular', description: 'Standard user access' },
       { name: 'Admin', description: 'Full administrative access' },
     ];
     
@@ -461,16 +458,16 @@ export async function seedDatabase(dataSource: DataSource) {
   
   // Assign grants to users - give each user access to different systems
   const grantAssignments = [
-    { userIndex: 0, systemName: 'Magento', instanceName: 'UCOOK Production', tierName: 'Admin' }, // John Smith - System Owner
-    { userIndex: 1, systemName: 'Acumatica', instanceName: 'Production', tierName: 'Admin' }, // Sarah Johnson - Manager
-    { userIndex: 2, systemName: 'Magento', instanceName: 'Faithful to Nature Production', tierName: 'Editor' }, // Alex van der Merwe
-    { userIndex: 3, systemName: 'Google Analytics', instanceName: 'Production', tierName: 'Analyst' }, // Jane Botha
-    { userIndex: 4, systemName: 'Zoho People', instanceName: 'Production', tierName: 'HR Admin' }, // Sipho Ndlovu
-    { userIndex: 5, systemName: 'Shopify', instanceName: 'SKOON Production', tierName: 'Staff' }, // Lerato Mthembu
-    { userIndex: 6, systemName: 'Magento', instanceName: 'PetHeaven Production', tierName: 'Editor' }, // Gerald Adams
-    { userIndex: 7, systemName: 'Acumatica', instanceName: 'Production', tierName: 'Accountant' }, // Emma Wilson
-    { userIndex: 8, systemName: 'Google Analytics', instanceName: 'Production', tierName: 'Viewer' }, // Michael Chen
-    { userIndex: 9, systemName: 'Magento', instanceName: 'UCOOK Staging', tierName: 'Admin' }, // David van Niekerk - Manager
+    { userIndex: 0, systemName: 'Magento', instanceName: 'UCOOK', tierName: 'Admin' }, // John Smith - System Owner
+    { userIndex: 1, systemName: 'Acumatica', instanceName: 'Faithful to Nature', tierName: 'Admin' }, // Sarah Johnson - Manager
+    { userIndex: 2, systemName: 'Magento', instanceName: 'Faithful to Nature', tierName: 'Regular' }, // Alex van der Merwe
+    { userIndex: 3, systemName: 'Freshdesk', instanceName: 'UCOOK', tierName: 'Regular' }, // Jane Botha
+    { userIndex: 4, systemName: 'n8n', instanceName: 'Faithful to Nature', tierName: 'Admin' }, // Sipho Ndlovu
+    { userIndex: 5, systemName: 'Bitquery', instanceName: 'SKOON', tierName: 'Regular' }, // Lerato Mthembu
+    { userIndex: 6, systemName: 'Magento', instanceName: 'SKOON', tierName: 'Regular' }, // Gerald Adams
+    { userIndex: 7, systemName: 'Acumatica', instanceName: 'UCOOK', tierName: 'Regular' }, // Emma Wilson
+    { userIndex: 8, systemName: 'Freshdesk', instanceName: 'Faithful to Nature', tierName: 'Regular' }, // Michael Chen
+    { userIndex: 9, systemName: 'Magento', instanceName: 'UCOOK', tierName: 'Admin' }, // David van Niekerk - Manager
   ];
   
   for (const assignment of grantAssignments) {
@@ -520,14 +517,14 @@ export async function seedDatabase(dataSource: DataSource) {
     // Use a different user than the first one, and find a proper instance/tier
     const removedUser = users[1]; // Sarah Johnson
     const magentoSystem = systems.find(s => s.name === 'Magento');
-    
+
     if (magentoSystem) {
       const magentoInstances = allInstances.filter(inst => inst.systemId === magentoSystem.id);
       const magentoTiers = allTiers.filter(t => t.systemId === magentoSystem.id);
-      
+
       if (magentoInstances.length > 0 && magentoTiers.length > 0) {
-        const removedInstance = magentoInstances[0]; // UCOOK Production
-        const removedTier = magentoTiers.find(t => t.name === 'Editor') || magentoTiers[0];
+        const removedInstance = magentoInstances[0]; // First instance (e.g., Faithful to Nature)
+        const removedTier = magentoTiers.find(t => t.name === 'Regular') || magentoTiers[0];
         
         // Check if there's already an active grant for this combination
         const existingActiveGrant = await grantRepository.findOne({

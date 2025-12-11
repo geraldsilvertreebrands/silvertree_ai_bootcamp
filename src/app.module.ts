@@ -7,6 +7,7 @@ import { SystemInstance } from './systems/entities/system-instance.entity';
 import { AccessTier } from './systems/entities/access-tier.entity';
 import { SystemOwner } from './ownership/entities/system-owner.entity';
 import { AccessGrant } from './access-control/entities/access-grant.entity';
+import { AuditLog } from './access-control/entities/audit-log.entity';
 import { IdentityModule } from './identity/identity.module';
 import { SystemsModule } from './systems/systems.module';
 import { AccessControlModule } from './access-control/access-control.module';
@@ -36,6 +37,7 @@ import { AccessRequest, AccessRequestItem } from './access-control/entities/acce
         AccessGrant,
         AccessRequest,
         AccessRequestItem,
+        AuditLog,
       ],
       synchronize: false, // NEVER use true - always use migrations for schema changes
       logging: process.env.NODE_ENV === 'development',

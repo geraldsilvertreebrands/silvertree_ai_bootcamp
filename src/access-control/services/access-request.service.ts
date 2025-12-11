@@ -27,6 +27,8 @@ import { validateRequestTransition } from './status-transition.validator';
 import { In } from 'typeorm';
 import { NOTIFICATION_SERVICE, INotificationService } from '../../integrations/notifications/notification.interface';
 import { DeepLinkHelper } from '../../integrations/notifications/deep-link.helper';
+import { AuditLogService } from './audit-log.service';
+import { AuditAction } from '../entities/audit-log.entity';
 
 @Injectable()
 export class AccessRequestService {
@@ -50,6 +52,7 @@ export class AccessRequestService {
     @Inject(NOTIFICATION_SERVICE)
     private readonly notificationService: INotificationService,
     private readonly deepLinkHelper: DeepLinkHelper,
+    private readonly auditLogService: AuditLogService,
   ) {}
 
   async create(
@@ -191,58 +194,23 @@ export class AccessRequestService {
 
     // Note: fullRequest.items already has the relations loaded from the query above
     // Don't override with savedItems as that would lose the relations
-    
-    // Send notifications (non-blocking)
+
+    // NOTIFICATION FLOW:
+    // 1. Request created → Notify SYSTEM OWNERS via Slack (they see it in Pending Provisions)
+    // 2. Owner provisions/rejects → Notify REQUESTER via Slack
     try {
-      this.logger.log(`[AccessRequestService] ========== NOTIFICATION DEBUG START ==========`);
-      this.logger.log(`[AccessRequestService] Request created: ${fullRequest.id}, status: ${fullRequest.status}`);
-      this.logger.log(`[AccessRequestService] Target user: ${fullRequest.targetUser?.email}, Manager ID: ${fullRequest.targetUser?.managerId}, Manager loaded: ${!!fullRequest.targetUser?.manager}, Manager email: ${fullRequest.targetUser?.manager?.email || 'NOT LOADED'}`);
-      this.logger.log(`[AccessRequestService] Notification service type: ${this.notificationService?.constructor?.name || 'UNKNOWN'}`);
-      this.logger.log(`[AccessRequestService] Notification service exists: ${!!this.notificationService}`);
-      
-      // CRITICAL: Always notify manager when request is created (REQUESTED status)
-      // Use the SAME logic as approveRequest - ensure manager relation is loaded
-      if (fullRequest.status === AccessRequestStatus.REQUESTED) {
-        this.logger.log(`[AccessRequestService] Status is REQUESTED - proceeding with manager notification`);
-        const managerEmail = fullRequest.targetUser?.manager?.email;
-        if (managerEmail) {
-          this.logger.log(`[AccessRequestService] ✓✓✓ SENDING MANAGER NOTIFICATION for request ${fullRequest.id} to: ${managerEmail}`);
-          this.logger.log(`[AccessRequestService] Manager relation loaded: ${!!fullRequest.targetUser?.manager}, Manager ID: ${fullRequest.targetUser?.managerId}`);
-          try {
-            this.logger.log(`[AccessRequestService] Calling notificationService.notifyManager...`);
-            await this.notificationService.notifyManager({
-              request: fullRequest,
-              action: 'request',
-              link: this.deepLinkHelper.approvalLink(fullRequest.id),
-            });
-            this.logger.log(`[AccessRequestService] ✓✓✓ MANAGER NOTIFICATION SENT SUCCESSFULLY to ${managerEmail}`);
-          } catch (notifError) {
-            this.logger.error(`[AccessRequestService] ❌ FAILED to send manager notification: ${notifError instanceof Error ? notifError.message : String(notifError)}`);
-            this.logger.error(`[AccessRequestService] Error stack: ${notifError instanceof Error ? notifError.stack : 'N/A'}`);
-          }
-        } else {
-          this.logger.error(`[AccessRequestService] ❌ CANNOT send manager notification - no manager email!`);
-          this.logger.error(`[AccessRequestService] Target user: ${fullRequest.targetUser?.email}, Manager ID: ${fullRequest.targetUser?.managerId}, Manager loaded: ${!!fullRequest.targetUser?.manager}`);
-        }
-      } else {
-        this.logger.log(`[AccessRequestService] Status is ${fullRequest.status} - NOT REQUESTED, skipping manager notification`);
-      }
-      this.logger.log(`[AccessRequestService] ========== NOTIFICATION DEBUG END ==========`);
-      
-      // If auto-approved, also notify system owners
-      if (fullRequest.status === AccessRequestStatus.APPROVED) {
-        this.logger.log(`[AccessRequestService] Request ${fullRequest.id} was auto-approved, also notifying system owners`);
-        await this.notificationService.notifySystemOwners({
-          request: fullRequest,
-          action: 'approve',
-          link: this.deepLinkHelper.pendingProvisioningLink(),
-        });
-      }
+      this.logger.log(`[AccessRequestService] Request ${fullRequest.id} created, notifying system owners via Slack`);
+      await this.notificationService.notifySystemOwners({
+        request: fullRequest,
+        action: 'request',
+        link: this.deepLinkHelper.pendingProvisioningLink(),
+      });
+      this.logger.log(`[AccessRequestService] ✓ System owners notified for new request`);
     } catch (error) {
       // Don't fail the request creation if notification fails
-      this.logger.error(`[AccessRequestService] Failed to send notification: ${error instanceof Error ? error.message : String(error)}`, error instanceof Error ? error.stack : undefined);
+      this.logger.error(`[AccessRequestService] ❌ Failed to notify system owners: ${error instanceof Error ? error.message : String(error)}`);
     }
-    
+
     return fullRequest as AccessRequest & { items: AccessRequestItem[] };
   }
 
@@ -292,47 +260,24 @@ export class AccessRequestService {
     }
 
     const updatedRequest = await this.loadRequestWithItems(requestId);
-    
-    // Send notifications (non-blocking)
-    try {
-      if (updatedRequest.status === AccessRequestStatus.APPROVED) {
-        this.logger.log(`[AccessRequestService] Request ${requestId} approved, sending notifications`);
-        
-        // CRITICAL: Only notify requester, NOT manager
-        // Manager should ONLY receive request notifications, never approval notifications
-        if (updatedRequest.requester?.email) {
-          this.logger.log(`[AccessRequestService] ✓✓✓ SENDING REQUESTER APPROVAL NOTIFICATION to: ${updatedRequest.requester.email}`);
-          this.logger.log(`[AccessRequestService] Requester relation loaded: ${!!updatedRequest.requester}, Requester ID: ${updatedRequest.requesterId}`);
-          this.logger.log(`[AccessRequestService] Manager email: ${updatedRequest.targetUser?.manager?.email || 'N/A'} - should NOT receive this notification`);
-          try {
-            await this.notificationService.notifyRequester({
-              request: updatedRequest,
-              action: 'approve',
-              link: this.deepLinkHelper.requestDetailsLink(updatedRequest.id),
-            });
-            this.logger.log(`[AccessRequestService] ✓✓✓ REQUESTER APPROVAL NOTIFICATION SENT SUCCESSFULLY to ${updatedRequest.requester.email}`);
-          } catch (notifError) {
-            this.logger.error(`[AccessRequestService] ❌ FAILED to send requester approval notification: ${notifError instanceof Error ? notifError.message : String(notifError)}`);
-            this.logger.error(`[AccessRequestService] Error stack: ${notifError instanceof Error ? notifError.stack : 'N/A'}`);
-          }
-        } else {
-          this.logger.error(`[AccessRequestService] ❌ CANNOT notify requester - requester not loaded!`);
-          this.logger.error(`[AccessRequestService] Requester ID: ${updatedRequest.requesterId}, Requester loaded: ${!!updatedRequest.requester}`);
-        }
-        
-        // Notify system owners for provisioning
-        await this.notificationService.notifySystemOwners({
-          request: updatedRequest,
-          action: 'approve',
-          link: this.deepLinkHelper.pendingProvisioningLink(),
-        });
-        this.logger.log(`[AccessRequestService] System owners notified`);
-      }
-    } catch (error) {
-      // Don't fail the approval if notification fails
-      this.logger.error(`[AccessRequestService] Failed to send notification: ${error instanceof Error ? error.message : String(error)}`, error instanceof Error ? error.stack : undefined);
-    }
-    
+
+    // Log to audit
+    await this.auditLogService.log({
+      action: AuditAction.REQUEST_APPROVED,
+      actorId: approverId,
+      targetUserId: updatedRequest.targetUserId,
+      resourceType: 'access_request',
+      resourceId: requestId,
+      details: {
+        itemCount: updatedRequest.items.length,
+        systems: updatedRequest.items.map(i => i.systemInstance?.system?.name).filter(Boolean),
+      },
+    });
+
+    // NO notifications here - system owners were already notified when request was created
+    // The ONLY notification to requester happens in provisionItem() with "Access Granted"
+    this.logger.log(`[AccessRequestService] Request ${requestId} approved (no notification - happens on provision)`);
+
     return updatedRequest;
   }
 
@@ -371,12 +316,24 @@ export class AccessRequestService {
     await this.accessRequestRepository.save(request);
 
     const updatedRequest = await this.loadRequestWithItems(requestId);
-    
-    // Send notifications (non-blocking)
+
+    // Log to audit
+    await this.auditLogService.log({
+      action: AuditAction.REQUEST_REJECTED,
+      actorId: rejectorId,
+      targetUserId: updatedRequest.targetUserId,
+      resourceType: 'access_request',
+      resourceId: requestId,
+      reason,
+      details: {
+        itemCount: updatedRequest.items.length,
+        systems: updatedRequest.items.map(i => i.systemInstance?.system?.name).filter(Boolean),
+      },
+    });
+
+    // Notify requester of rejection via Slack
     try {
-      this.logger.log(`[AccessRequestService] Request ${requestId} rejected, notifying requester`);
-      this.logger.log(`[AccessRequestService] Requester: ${updatedRequest.requester?.email || 'NOT LOADED'}, Reason: ${reason || 'No reason provided'}`);
-      
+      this.logger.log(`[AccessRequestService] Request ${requestId} rejected, notifying requester via Slack`);
       if (updatedRequest.requester?.email) {
         await this.notificationService.notifyRequester({
           request: updatedRequest,
@@ -384,15 +341,12 @@ export class AccessRequestService {
           reason,
           link: this.deepLinkHelper.requestDetailsLink(updatedRequest.id),
         });
-        this.logger.log(`[AccessRequestService] Requester rejection notification sent`);
-      } else {
-        this.logger.warn(`[AccessRequestService] Cannot notify requester - requester not loaded or no email`);
+        this.logger.log(`[AccessRequestService] ✓ Requester notified of rejection`);
       }
     } catch (error) {
-      // Don't fail the rejection if notification fails
-      this.logger.error(`[AccessRequestService] Failed to send notification: ${error instanceof Error ? error.message : String(error)}`, error instanceof Error ? error.stack : undefined);
+      this.logger.error(`[AccessRequestService] ❌ Failed to notify requester: ${error instanceof Error ? error.message : String(error)}`);
     }
-    
+
     return updatedRequest;
   }
 
@@ -452,6 +406,20 @@ export class AccessRequestService {
         await this.accessRequestRepository.save(request);
       }
     }
+
+    // Log to audit
+    await this.auditLogService.log({
+      action: AuditAction.ITEM_APPROVED,
+      actorId: approverId,
+      targetUserId: item.accessRequest.targetUserId,
+      resourceType: 'access_request_item',
+      resourceId: itemId,
+      details: {
+        systemName: item.systemInstance?.system?.name,
+        instanceName: item.systemInstance?.name,
+        tierName: item.accessTier?.name,
+      },
+    });
 
     return await this.accessRequestItemRepository.findOne({
       where: { id: itemId },
@@ -521,22 +489,33 @@ export class AccessRequestService {
       ],
     });
 
-    // Send notification to requester when system owner rejects an approved item
-    if (updatedItem && updatedItem.status === AccessRequestItemStatus.REJECTED) {
+    // Log to audit
+    await this.auditLogService.log({
+      action: AuditAction.ITEM_REJECTED,
+      actorId: rejectorId,
+      targetUserId: item.accessRequest.targetUserId,
+      resourceType: 'access_request_item',
+      resourceId: itemId,
+      reason: note,
+      details: {
+        systemName: item.systemInstance?.system?.name,
+        instanceName: item.systemInstance?.name,
+        tierName: item.accessTier?.name,
+      },
+    });
+
+    // Send notification to requester about rejection
+    if (request && request.requester?.email) {
       try {
-        const fullRequest = await this.loadRequestWithItems(updatedItem.accessRequestId);
-        this.logger.log(`[AccessRequestService] System owner rejected approved item ${itemId}, notifying requester`);
-        if (fullRequest.requester?.email) {
-          await this.notificationService.notifyRequester({
-            request: fullRequest,
-            action: 'reject',
-            reason: note || 'Rejected by system owner',
-            link: this.deepLinkHelper.requestDetailsLink(fullRequest.id),
-          });
-          this.logger.log(`[AccessRequestService] Requester notification sent for rejected item`);
-        }
+        await this.notificationService.notifyRequester({
+          request: request,
+          action: 'reject',
+          reason: note || 'Rejected by system owner',
+          link: this.deepLinkHelper.requestDetailsLink(request.id),
+        });
+        this.logger.log(`[AccessRequestService] ✓ Requester notified of rejection`);
       } catch (error) {
-        this.logger.error(`[AccessRequestService] Failed to send notification: ${error instanceof Error ? error.message : String(error)}`, error instanceof Error ? error.stack : undefined);
+        this.logger.error(`[AccessRequestService] ❌ Failed to notify requester: ${error instanceof Error ? error.message : String(error)}`);
       }
     }
 
@@ -713,6 +692,26 @@ export class AccessRequestService {
       if (!grant) {
         throw new NotFoundException('Grant not found after approval');
       }
+
+      // Send "Access Granted" notification to requester
+      try {
+        const fullRequest = await this.accessRequestRepository.findOne({
+          where: { id: updatedItem.accessRequestId },
+          relations: ['requester', 'targetUser', 'items', 'items.systemInstance', 'items.systemInstance.system', 'items.accessTier'],
+        });
+        if (fullRequest) {
+          this.logger.log(`[AccessRequestService] ✓✓✓ SENDING ACCESS GRANTED NOTIFICATION to requester: ${fullRequest.requester?.email}`);
+          await this.notificationService.notifyRequester({
+            request: fullRequest,
+            action: 'activate',
+            link: this.deepLinkHelper.requestDetailsLink(fullRequest.id),
+          });
+          this.logger.log(`[AccessRequestService] ✓✓✓ ACCESS GRANTED NOTIFICATION SENT SUCCESSFULLY`);
+        }
+      } catch (error) {
+        this.logger.error(`[AccessRequestService] ❌ Failed to send notification: ${error instanceof Error ? error.message : String(error)}`);
+      }
+
       return grant;
     }
 
@@ -749,6 +748,21 @@ export class AccessRequestService {
       item.accessGrantId = grant.id;
       await this.accessRequestItemRepository.save(item);
 
+      // Log to audit
+      await this.auditLogService.log({
+        action: AuditAction.ITEM_PROVISIONED,
+        actorId: ownerId,
+        targetUserId: item.accessRequest.targetUserId,
+        resourceType: 'access_request_item',
+        resourceId: itemId,
+        details: {
+          grantId: grant.id,
+          systemName: item.systemInstance?.system?.name,
+          instanceName: item.systemInstance?.name,
+          tierName: item.accessTier?.name,
+        },
+      });
+
       // Send notifications (non-blocking)
       try {
         const fullRequest = await this.accessRequestRepository.findOne({
@@ -756,15 +770,17 @@ export class AccessRequestService {
           relations: ['requester', 'targetUser', 'items', 'items.systemInstance', 'items.systemInstance.system', 'items.accessTier'],
         });
         if (fullRequest) {
+          this.logger.log(`[AccessRequestService] ✓✓✓ SENDING PROVISION NOTIFICATION to requester: ${fullRequest.requester?.email}`);
           await this.notificationService.notifyRequester({
             request: fullRequest,
             action: 'activate',
             link: this.deepLinkHelper.requestDetailsLink(fullRequest.id),
           });
+          this.logger.log(`[AccessRequestService] ✓✓✓ PROVISION NOTIFICATION SENT SUCCESSFULLY`);
         }
       } catch (error) {
         // Don't fail the provisioning if notification fails
-        console.error('Failed to send notification:', error);
+        this.logger.error(`[AccessRequestService] ❌ Failed to send provision notification: ${error instanceof Error ? error.message : String(error)}`);
       }
 
       return grant;

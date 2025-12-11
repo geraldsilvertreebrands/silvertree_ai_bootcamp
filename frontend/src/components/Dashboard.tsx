@@ -6,9 +6,10 @@ import MyAccessView from './Dashboard/MyAccessView';
 import ApprovalsView from './Dashboard/ApprovalsView';
 import ProvisioningView from './Dashboard/ProvisioningView';
 import UsersView from './Dashboard/UsersView';
-import OverviewView from './Dashboard/OverviewView';
+import LogGrantView from './Dashboard/LogGrantView';
+import AuditLogView from './Dashboard/AuditLogView';
 
-type View = 'my-access' | 'approvals' | 'provisioning' | 'users' | 'overview' | 'removal' | 'log' | 'audit';
+type View = 'my-access' | 'approvals' | 'provisioning' | 'users' | 'removal' | 'log' | 'audit';
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -17,14 +18,15 @@ export default function Dashboard() {
 
   // Handle hash routing
   useEffect(() => {
+    const validViews = ['my-access', 'approvals', 'provisioning', 'users', 'removal', 'log', 'audit'];
     const hash = window.location.hash.substring(1);
-    if (hash && ['my-access', 'approvals', 'provisioning', 'users', 'overview', 'removal', 'log', 'audit'].includes(hash)) {
+    if (hash && validViews.includes(hash)) {
       setCurrentView(hash as View);
     }
 
     const handleHashChange = () => {
       const newHash = window.location.hash.substring(1);
-      if (newHash && ['my-access', 'approvals', 'provisioning', 'users', 'overview', 'removal', 'log', 'audit'].includes(newHash)) {
+      if (newHash && validViews.includes(newHash)) {
         setCurrentView(newHash as View);
       }
     };
@@ -43,76 +45,38 @@ export default function Dashboard() {
         return <ProvisioningView />;
       case 'users':
         return <UsersView />;
-      case 'overview':
-        return <OverviewView />;
+      case 'log':
+        return <LogGrantView />;
+      case 'audit':
+        return <AuditLogView />;
       default:
         return <MyAccessView />;
     }
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#0a0a0f] relative">
-      <div className="absolute inset-0 bg-gradient-mesh" />
-      
+    <div className="flex h-screen overflow-hidden bg-black relative">
       <Sidebar
         currentView={currentView}
         onViewChange={(view) => setCurrentView(view as View)}
+        user={user}
         collapsed={sidebarCollapsed}
         onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
-        user={user}
       />
-      
-      <div className="flex-1 flex flex-col overflow-hidden relative z-10">
-        <motion.header
-          initial={{ y: -20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          className="glass-dark border-b border-white/10 px-8 py-6 relative"
-        >
-          <div className="flex items-center justify-between relative z-10">
-            <div>
-              <motion.h1
-                key={currentView}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="text-4xl font-bold gradient-text mb-2 tracking-tight"
-              >
-                {currentView === 'my-access' && 'My Access'}
-                {currentView === 'approvals' && 'Pending Approvals'}
-                {currentView === 'provisioning' && 'Pending Provisions'}
-                {currentView === 'users' && 'Users & Access'}
-                {currentView === 'overview' && 'Access Overview'}
-              </motion.h1>
-              <motion.p
-                key={`${currentView}-desc`}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-white/60 mt-1.5 text-base"
-              >
-                {currentView === 'my-access' && 'Manage your access grants and request new permissions'}
-                {currentView === 'approvals' && 'Approve or reject access requests for your team'}
-                {currentView === 'provisioning' && 'Provision or reject approved access requests for systems you own'}
-                {currentView === 'users' && 'Manage users and their system access'}
-                {currentView === 'overview' && 'View and manage all access grants'}
-              </motion.p>
-            </div>
-          </div>
-        </motion.header>
 
-        <main className="flex-1 overflow-y-auto p-8 relative">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={currentView}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            >
-              {renderView()}
-            </motion.div>
-          </AnimatePresence>
-        </main>
-      </div>
+      <main className="flex-1 overflow-y-auto p-8 bg-[#050505]">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentView}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+          >
+            {renderView()}
+          </motion.div>
+        </AnimatePresence>
+      </main>
     </div>
   );
 }
-

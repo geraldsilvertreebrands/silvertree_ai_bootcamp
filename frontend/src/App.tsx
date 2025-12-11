@@ -2,17 +2,18 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Dashboard from './components/Dashboard';
 import Login from './components/Login';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { ToastProvider } from './contexts/ToastContext';
 
 function AppContent() {
   const { user, loading } = useAuth();
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-black">
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          className="w-16 h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"
+          className="w-16 h-16 border-4 border-white/20 border-t-white rounded-full animate-spin"
         />
       </div>
     );
@@ -32,9 +33,9 @@ function AppContent() {
       ) : (
         <motion.div
           key="login"
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, scale: 0.95 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
         >
           <Login />
         </motion.div>
@@ -46,7 +47,9 @@ function AppContent() {
 function App() {
   return (
     <AuthProvider>
-      <AppContent />
+      <ToastProvider>
+        <AppContent />
+      </ToastProvider>
     </AuthProvider>
   );
 }

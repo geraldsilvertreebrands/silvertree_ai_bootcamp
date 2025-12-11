@@ -6,23 +6,28 @@ export class DeepLinkHelper {
   private readonly baseUrl: string;
 
   constructor(configService: ConfigService) {
-    this.baseUrl = configService.get<string>('APP_BASE_URL', 'http://localhost:3000');
+    // FRONTEND_URL for the React app (default to Vite dev server)
+    // Falls back to APP_BASE_URL for backwards compatibility
+    this.baseUrl = configService.get<string>('FRONTEND_URL')
+      || configService.get<string>('APP_BASE_URL', 'http://localhost:5173');
   }
 
   approvalLink(requestId: string): string {
-    return `${this.baseUrl}/dashboard.html#approvals`;
+    return `${this.baseUrl}/#approvals`;
   }
 
   pendingProvisioningLink(): string {
-    return `${this.baseUrl}/dashboard.html#provisioning`;
+    return `${this.baseUrl}/#provisioning`;
   }
 
   pendingRemovalLink(): string {
-    return `${this.baseUrl}/dashboard.html#removal`;
+    return `${this.baseUrl}/#removal`;
   }
 
   requestDetailsLink(requestId: string): string {
-    return `${this.baseUrl}/dashboard.html#requests`;
+    return `${this.baseUrl}/#my-access`;
   }
 }
+
+
 

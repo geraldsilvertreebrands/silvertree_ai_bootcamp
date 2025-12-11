@@ -35,7 +35,19 @@
       "Bash(npx ts-node test-manager-approval-flow.ts)",
       "Bash(echo:*)",
       "Bash(xargs:*)",
-      "Bash(REQUESTER_TOKEN=\"c2FkeWFnZXJhbGRtQGdtYWlsLmNvbQ==\" echo \"=== Testing as sadyageraldm (regular user) ===\" curl -s \"http://localhost:3000/api/v1/auth/me\" -H \"Authorization: Bearer $REQUESTER_TOKEN\")"
+      "Bash(REQUESTER_TOKEN=\"c2FkeWFnZXJhbGRtQGdtYWlsLmNvbQ==\" echo \"=== Testing as sadyageraldm (regular user) ===\" curl -s \"http://localhost:3000/api/v1/auth/me\" -H \"Authorization: Bearer $REQUESTER_TOKEN\")",
+      "WebFetch(domain:www.100lostspecies.com)",
+      "Bash(mkdir:*)",
+      "Bash(npm run build:*)",
+      "Bash(npx vite build:*)",
+      "Bash(TOKEN=\"Z2VyYWxkc0BzaWx2ZXJ0cmVlYnJhbmRzLmNvbQ==\" curl -s http://localhost:3000/api/v1/users/me/grants -H \"Authorization: Bearer $TOKEN\")",
+      "Bash(npx tsc:*)",
+      "Bash(ls:*)",
+      "Bash(npm run migration:run:*)",
+      "Bash(OWNER_TOKEN=\"am9obi5zbWl0aEBzaWx2ZXJ0cmVlYnJhbmRzLmNvbQ==\" echo \"=== Systems response: ===\" curl -s \"http://localhost:3000/api/v1/systems\" -H \"Authorization: Bearer $OWNER_TOKEN\")",
+      "Bash(OWNER_TOKEN=\"am9obi5zbWl0aEBzaWx2ZXJ0cmVlYnJhbmRzLmNvbQ==\")",
+      "Bash(OWNER_TOKEN=\"am9obi5zbWl0aEBzaWx2ZXJ0cmVlYnJhbmRzLmNvbQ==\" echo \"=== Check access tiers endpoint ===\" curl -s \"http://localhost:3000/api/v1/systems/8f91eab1-4b09-455e-b88b-db125d8e9c01/access-tiers\" -H \"Authorization: Bearer $OWNER_TOKEN\")",
+      "Bash(kill:*)"
     ]
   }
 }
