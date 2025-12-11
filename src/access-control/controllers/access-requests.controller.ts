@@ -82,19 +82,11 @@ export class AccessRequestsController {
       throw new UnauthorizedException('User not found');
     }
 
-    // Check if user is system owner (owner/admin role)
-    const isOwner = userInfo.role === 'owner' || userInfo.role === 'admin';
-    
-    if (isOwner) {
-      // Return requests for systems owned by this user
-      const requestStatus = status as any;
-      const requests = await this.accessRequestService.findAllForSystemOwner(user.id, requestStatus);
-      return { data: requests };
-    } else {
-      // Return requests for this user (as requester or target)
-      const requests = await this.accessRequestService.findAllForUser(user.id, status as any);
-      return { data: requests };
-    }
+    // Always return requests for this user (as requester or target)
+    // This endpoint is used for "My Access" page and should only show user's own requests
+    // System owner requests are handled by /pending-provisioning endpoint
+    const requests = await this.accessRequestService.findAllForUser(user.id, status as any);
+    return { data: requests };
   }
 
   @Get('pending')

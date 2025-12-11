@@ -8,7 +8,8 @@ import {
   FileText,
   LogOut,
   Menu,
-  X
+  X,
+  Settings
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -23,6 +24,7 @@ interface SidebarProps {
 const menuItems = [
   { id: 'my-access', label: 'My Access', icon: Shield, available: true },
   { id: 'approvals', label: 'Pending Approvals', icon: CheckCircle, available: false },
+  { id: 'provisioning', label: 'Pending Provisions', icon: Settings, available: false },
   { id: 'users', label: 'Users & Access', icon: Users, available: false },
   { id: 'overview', label: 'Access Overview', icon: Eye, available: false },
   { id: 'log', label: 'Log Access Grant', icon: Plus, available: false },
@@ -35,7 +37,8 @@ export default function Sidebar({ currentView, onViewChange, collapsed, onToggle
   const isOwner = user?.role === 'owner' || user?.role === 'admin';
 
   const visibleItems = menuItems.filter(item => {
-    if (item.id === 'approvals') return isManager || isOwner;
+    if (item.id === 'approvals') return isManager; // Only for managers (manager approvals)
+    if (item.id === 'provisioning') return isOwner; // Only for owners (system owner provisioning)
     if (['users', 'overview', 'log', 'audit'].includes(item.id)) return isOwner;
     return item.available;
   });

@@ -4,10 +4,11 @@ import { useAuth } from '../contexts/AuthContext';
 import Sidebar from './Dashboard/Sidebar';
 import MyAccessView from './Dashboard/MyAccessView';
 import ApprovalsView from './Dashboard/ApprovalsView';
+import ProvisioningView from './Dashboard/ProvisioningView';
 import UsersView from './Dashboard/UsersView';
 import OverviewView from './Dashboard/OverviewView';
 
-type View = 'my-access' | 'approvals' | 'users' | 'overview' | 'provisioning' | 'removal' | 'log' | 'audit';
+type View = 'my-access' | 'approvals' | 'provisioning' | 'users' | 'overview' | 'removal' | 'log' | 'audit';
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -17,13 +18,13 @@ export default function Dashboard() {
   // Handle hash routing
   useEffect(() => {
     const hash = window.location.hash.substring(1);
-    if (hash && ['my-access', 'approvals', 'users', 'overview', 'provisioning', 'removal', 'log', 'audit'].includes(hash)) {
+    if (hash && ['my-access', 'approvals', 'provisioning', 'users', 'overview', 'removal', 'log', 'audit'].includes(hash)) {
       setCurrentView(hash as View);
     }
 
     const handleHashChange = () => {
       const newHash = window.location.hash.substring(1);
-      if (newHash && ['my-access', 'approvals', 'users', 'overview', 'provisioning', 'removal', 'log', 'audit'].includes(newHash)) {
+      if (newHash && ['my-access', 'approvals', 'provisioning', 'users', 'overview', 'removal', 'log', 'audit'].includes(newHash)) {
         setCurrentView(newHash as View);
       }
     };
@@ -38,6 +39,8 @@ export default function Dashboard() {
         return <MyAccessView />;
       case 'approvals':
         return <ApprovalsView />;
+      case 'provisioning':
+        return <ProvisioningView />;
       case 'users':
         return <UsersView />;
       case 'overview':
@@ -75,6 +78,7 @@ export default function Dashboard() {
               >
                 {currentView === 'my-access' && 'My Access'}
                 {currentView === 'approvals' && 'Pending Approvals'}
+                {currentView === 'provisioning' && 'Pending Provisions'}
                 {currentView === 'users' && 'Users & Access'}
                 {currentView === 'overview' && 'Access Overview'}
               </motion.h1>
@@ -86,6 +90,7 @@ export default function Dashboard() {
               >
                 {currentView === 'my-access' && 'Manage your access grants and request new permissions'}
                 {currentView === 'approvals' && 'Approve or reject access requests for your team'}
+                {currentView === 'provisioning' && 'Provision or reject approved access requests for systems you own'}
                 {currentView === 'users' && 'Manage users and their system access'}
                 {currentView === 'overview' && 'View and manage all access grants'}
               </motion.p>

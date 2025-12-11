@@ -648,7 +648,9 @@ export class AccessRequestService {
 
     if (systemIds.length === 0) return [];
 
-    // Find approved items for owned systems that don't have grants yet
+    // Find items for owned systems that need owner action:
+    // 1. REQUESTED items (need approval/rejection)
+    // 2. APPROVED items that don't have grants yet (need provisioning)
     return this.accessRequestItemRepository
       .createQueryBuilder('item')
       .innerJoinAndSelect('item.accessRequest', 'request')
@@ -657,15 +659,22 @@ export class AccessRequestService {
       .innerJoinAndSelect('item.systemInstance', 'systemInstance')
       .innerJoinAndSelect('systemInstance.system', 'system')
       .innerJoinAndSelect('item.accessTier', 'accessTier')
-      .where('item.status = :status', { status: AccessRequestItemStatus.APPROVED })
-      .andWhere('system.id IN (:...systemIds)', { systemIds })
-      .andWhere('item.accessGrantId IS NULL') // Only items that haven't been provisioned yet
+      .where('system.id IN (:...systemIds)', { systemIds })
+      .andWhere(
+        '(item.status = :requestedStatus OR (item.status = :approvedStatus AND item.accessGrantId IS NULL))',
+        {
+          requestedStatus: AccessRequestItemStatus.REQUESTED,
+          approvedStatus: AccessRequestItemStatus.APPROVED,
+        },
+      )
       .orderBy('item.createdAt', 'ASC')
       .getMany();
   }
 
   /**
-   * Provision an approved request item by creating an active grant
+   * Provision a request item by creating an active grant
+   * For REQUESTED items: approves first, then provisions (creates grant)
+   * For APPROVED items: provisions directly (creates grant)
    * (PHASE2-004: System Owner Provisioning)
    */
   async provisionItem(itemId: string, ownerId: string): Promise<AccessGrant> {
@@ -678,10 +687,39 @@ export class AccessRequestService {
       throw new NotFoundException(`AccessRequestItem ${itemId} not found`);
     }
 
-    // Check item is approved
+    // Check authorization: user must be system owner
+    const isOwner = await this.systemOwnerService.isSystemOwner(ownerId, item.systemInstance.systemId);
+    if (!isOwner) {
+      throw new ForbiddenException(
+        `You are not authorized to provision items for system '${item.systemInstance.system.name}'. You must be a system owner.`,
+      );
+    }
+
+    // If item is REQUESTED, approve it first (this will create the grant automatically)
+    if (item.status === AccessRequestItemStatus.REQUESTED) {
+      await this.approveItem(itemId, ownerId);
+      // Reload item to get the grant ID
+      const updatedItem = await this.accessRequestItemRepository.findOne({
+        where: { id: itemId },
+        relations: ['accessRequest', 'systemInstance', 'systemInstance.system', 'accessTier'],
+      });
+      if (!updatedItem || !updatedItem.accessGrantId) {
+        throw new BadRequestException('Failed to create grant during approval');
+      }
+      const grant = await this.accessGrantRepository.findOne({
+        where: { id: updatedItem.accessGrantId },
+        relations: ['user', 'systemInstance', 'systemInstance.system', 'accessTier', 'grantedBy'],
+      });
+      if (!grant) {
+        throw new NotFoundException('Grant not found after approval');
+      }
+      return grant;
+    }
+
+    // For APPROVED items, proceed with provisioning
     if (item.status !== AccessRequestItemStatus.APPROVED) {
       throw new BadRequestException(
-        `Cannot provision item in status '${item.status}'. Only 'approved' items can be provisioned.`,
+        `Cannot provision item in status '${item.status}'. Only 'requested' or 'approved' items can be provisioned.`,
       );
     }
 
@@ -695,14 +733,6 @@ export class AccessRequestService {
       if (existingGrant) {
         return existingGrant;
       }
-    }
-
-    // Check authorization: user must be system owner
-    const isOwner = await this.systemOwnerService.isSystemOwner(ownerId, item.systemInstance.systemId);
-    if (!isOwner) {
-      throw new ForbiddenException(
-        `You are not authorized to provision items for system '${item.systemInstance.system.name}'. You must be a system owner.`,
-      );
     }
 
     // Create active grant from approved item

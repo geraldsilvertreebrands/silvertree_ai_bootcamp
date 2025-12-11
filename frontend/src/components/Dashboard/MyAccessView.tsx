@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, Plus, Copy, CheckCircle2, Clock, XCircle, Sparkles } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
@@ -60,7 +60,7 @@ export default function MyAccessView() {
       };
 
       const [grantsRes, requestsRes] = await Promise.all([
-        fetch(`${API_BASE}/api/v1/users/my-grants`, { headers }),
+        fetch(`${API_BASE}/api/v1/users/me/grants`, { headers }),
         fetch(`${API_BASE}/api/v1/access-requests`, { headers }),
       ]);
 
@@ -79,6 +79,24 @@ export default function MyAccessView() {
       setLoading(false);
     }
   };
+
+  // Filter active grants (status === 'active')
+  const activeGrants = useMemo(() => {
+    return grants.filter(grant => grant.status.toLowerCase() === 'active');
+  }, [grants]);
+
+  // Filter pending requests (status === 'requested' || status === 'approved')
+  const pendingRequests = useMemo(() => {
+    return requests.filter(request => {
+      const status = request.status.toLowerCase();
+      return status === 'requested' || status === 'approved';
+    });
+  }, [requests]);
+
+  // Filter rejected requests (status === 'rejected')
+  const rejectedRequests = useMemo(() => {
+    return requests.filter(request => request.status.toLowerCase() === 'rejected');
+  }, [requests]);
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -123,7 +141,7 @@ export default function MyAccessView() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-12">
       {/* Header Actions */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
@@ -138,9 +156,9 @@ export default function MyAccessView() {
             className="text-3xl font-bold gradient-text mb-2 flex items-center gap-3"
           >
             <Sparkles className="text-blue-400" size={28} />
-            Current Access
+            My Access
           </motion.h2>
-          <p className="text-white/60 text-lg font-medium">Your active system access permissions</p>
+          <p className="text-white/60 text-lg font-medium">View and manage your access permissions</p>
         </div>
         <div className="flex gap-3">
           <motion.button
@@ -162,15 +180,16 @@ export default function MyAccessView() {
         </div>
       </motion.div>
 
-      {/* Access Grants */}
+      {/* Section 1: Current Access */}
       <div>
-        <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-          <Shield size={20} className="text-indigo-400" />
-          Active Grants ({grants.length})
+        <h3 className="text-xl font-semibold text-white mb-6 flex items-center gap-3">
+          <Shield size={24} className="text-indigo-400" />
+          Current Access
+          <span className="text-sm font-normal text-white/50">({activeGrants.length})</span>
         </h3>
         
         <AnimatePresence>
-          {grants.length === 0 ? (
+          {activeGrants.length === 0 ? (
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -193,7 +212,7 @@ export default function MyAccessView() {
             </motion.div>
           ) : (
             <div className="grid gap-4">
-              {grants.map((grant, index) => (
+              {activeGrants.map((grant, index) => (
                 <motion.div
                   key={grant.id}
                   initial={{ opacity: 0, y: 20 }}
@@ -238,55 +257,137 @@ export default function MyAccessView() {
         </AnimatePresence>
       </div>
 
-      {/* Access Requests */}
-      {requests.length > 0 && (
-        <div>
-          <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-            <Clock size={20} className="text-amber-400" />
-            Access Requests ({requests.length})
-          </h3>
-          
-          <div className="grid gap-4">
-            {requests.map((request, index) => (
-              <motion.div
-                key={request.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-                className="glass-dark-elevated rounded-2xl p-6"
-              >
-                <div className="flex items-center justify-between mb-6">
-                  <motion.span
-                    whileHover={{ scale: 1.05 }}
-                    className={`px-4 py-2 rounded-xl text-xs font-bold border flex items-center gap-2 ${getStatusColor(request.status)} backdrop-blur-sm`}
-                  >
-                    {getStatusIcon(request.status)}
-                    {request.status}
-                  </motion.span>
-                  <span className="text-sm text-white/50 font-medium">
-                    {formatDate(request.createdAt)}
-                  </span>
-                </div>
-                <div className="space-y-3">
-                  {request.items.map((item) => (
-                    <motion.div
-                      key={item.id}
-                      whileHover={{ x: 4 }}
-                      className="p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all"
+      {/* Section 2: Pending Requests */}
+      <div>
+        <h3 className="text-xl font-semibold text-white mb-6 flex items-center gap-3">
+          <Clock size={24} className="text-amber-400" />
+          Pending Requests
+          <span className="text-sm font-normal text-white/50">({pendingRequests.length})</span>
+        </h3>
+        
+        <AnimatePresence>
+          {pendingRequests.length === 0 ? (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="glass-dark-elevated rounded-2xl p-12 text-center relative overflow-hidden"
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 via-orange-500/5 to-yellow-500/5" />
+              <div className="w-16 h-16 mx-auto mb-4 rounded-xl bg-amber-600/10 border border-amber-500/20 flex items-center justify-center">
+                <Clock size={32} className="text-amber-400" />
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">No Pending Requests</h3>
+              <p className="text-white/60 font-medium">All your access requests have been processed</p>
+            </motion.div>
+          ) : (
+            <div className="grid gap-4">
+              {pendingRequests.map((request, index) => (
+                <motion.div
+                  key={request.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  whileHover={{ scale: 1.01, y: -2 }}
+                  className="glass-dark-elevated rounded-2xl p-6"
+                >
+                  <div className="flex items-center justify-between mb-6">
+                    <motion.span
+                      whileHover={{ scale: 1.05 }}
+                      className={`px-4 py-2 rounded-xl text-xs font-bold border flex items-center gap-2 ${getStatusColor(request.status)} backdrop-blur-sm`}
                     >
-                      <p className="font-semibold text-white mb-1">
-                        {item.systemInstance.system.name} • {item.systemInstance.name}
-                      </p>
-                      <p className="text-sm text-white/60 font-medium">{item.accessTier.name}</p>
-                    </motion.div>
-                  ))}
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      )}
+                      {getStatusIcon(request.status)}
+                      {request.status}
+                    </motion.span>
+                    <span className="text-sm text-white/50 font-medium">
+                      {formatDate(request.createdAt)}
+                    </span>
+                  </div>
+                  <div className="space-y-3">
+                    {request.items.map((item) => (
+                      <motion.div
+                        key={item.id}
+                        whileHover={{ x: 4 }}
+                        className="p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all"
+                      >
+                        <p className="font-semibold text-white mb-1">
+                          {item.systemInstance.system.name} • {item.systemInstance.name}
+                        </p>
+                        <p className="text-sm text-white/60 font-medium">{item.accessTier.name}</p>
+                      </motion.div>
+                    ))}
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Section 3: Rejected Requests */}
+      <div>
+        <h3 className="text-xl font-semibold text-white mb-6 flex items-center gap-3">
+          <XCircle size={24} className="text-red-400" />
+          Rejected Requests
+          <span className="text-sm font-normal text-white/50">({rejectedRequests.length})</span>
+        </h3>
+        
+        <AnimatePresence>
+          {rejectedRequests.length === 0 ? (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="glass-dark-elevated rounded-2xl p-12 text-center relative overflow-hidden"
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 via-pink-500/5 to-rose-500/5" />
+              <div className="w-16 h-16 mx-auto mb-4 rounded-xl bg-red-600/10 border border-red-500/20 flex items-center justify-center">
+                <XCircle size={32} className="text-red-400" />
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">No Rejected Requests</h3>
+              <p className="text-white/60 font-medium">All your requests have been approved or are pending</p>
+            </motion.div>
+          ) : (
+            <div className="grid gap-4">
+              {rejectedRequests.map((request, index) => (
+                <motion.div
+                  key={request.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  whileHover={{ scale: 1.01, y: -2 }}
+                  className="glass-dark-elevated rounded-2xl p-6"
+                >
+                  <div className="flex items-center justify-between mb-6">
+                    <motion.span
+                      whileHover={{ scale: 1.05 }}
+                      className={`px-4 py-2 rounded-xl text-xs font-bold border flex items-center gap-2 ${getStatusColor(request.status)} backdrop-blur-sm`}
+                    >
+                      {getStatusIcon(request.status)}
+                      {request.status}
+                    </motion.span>
+                    <span className="text-sm text-white/50 font-medium">
+                      {formatDate(request.createdAt)}
+                    </span>
+                  </div>
+                  <div className="space-y-3">
+                    {request.items.map((item) => (
+                      <motion.div
+                        key={item.id}
+                        whileHover={{ x: 4 }}
+                        className="p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all"
+                      >
+                        <p className="font-semibold text-white mb-1">
+                          {item.systemInstance.system.name} • {item.systemInstance.name}
+                        </p>
+                        <p className="text-sm text-white/60 font-medium">{item.accessTier.name}</p>
+                      </motion.div>
+                    ))}
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }
-

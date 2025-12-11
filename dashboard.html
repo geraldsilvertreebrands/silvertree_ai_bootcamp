@@ -1095,7 +1095,7 @@
                 document.getElementById('nav-users').style.display = 'flex';
                 // Removed nav-requests - requests shown in "my-access"
                 document.getElementById('nav-provisioning').style.display = 'flex';
-                document.getElementById('nav-removal').style.display = 'flex';
+                document.getElementById('nav-removal').style.display = 'none'; // Removed - not needed
                 document.getElementById('nav-overview').style.display = 'flex';
                 document.getElementById('nav-log').style.display = 'flex';
                 document.getElementById('nav-audit').style.display = 'flex';
@@ -1103,7 +1103,6 @@
                 document.getElementById('nav-approvals').style.display = 'none'; // Owners don't need approvals tab
                 loadView('users');
                 updateProvisioningBadge();
-                updateRemovalBadge();
             } else if (isManager) {
                 document.getElementById('nav-my-access').style.display = 'flex';
                 document.getElementById('nav-approvals').style.display = 'flex'; // Show approvals for managers
@@ -1134,7 +1133,7 @@
             if (hash && hash !== currentView) {
                 // Valid views based on role
                 const validViews = isOwner
-                    ? ['users', 'provisioning', 'removal', 'overview', 'log', 'audit', 'my-access']
+                    ? ['users', 'provisioning', 'overview', 'log', 'audit', 'my-access']
                     : isManager
                         ? ['my-access', 'approvals']
                         : ['my-access'];
@@ -1205,6 +1204,35 @@
                 return;
                 container.innerHTML = await loadRequestsView();
             } else if (view === 'approvals') {
+                // Only managers should see approvals - redirect others to my-access
+                const isOwner = currentUser?.role === 'owner' || currentUser?.role === 'admin';
+                if (isOwner) {
+                    // Owners don't have approvals, redirect to my-access
+                    loadView('my-access');
+                    return;
+                }
+                // Check if user is actually a manager
+                try {
+                    const token = localStorage.getItem('authToken');
+                    const usersResponse = await fetch(`${API_BASE}/api/v1/users`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (usersResponse.ok) {
+                        const usersData = await usersResponse.json();
+                        const users = usersData.data || usersData || [];
+                        const currentUserId = currentUser?.id;
+                        const isManager = currentUserId && users.some(u => u.managerId === currentUserId && u.id !== currentUserId);
+                        if (!isManager) {
+                            // Not a manager, redirect to my-access
+                            loadView('my-access');
+                            return;
+                        }
+                    }
+                } catch (err) {
+                    console.error('Error checking manager status:', err);
+                    loadView('my-access');
+                    return;
+                }
                 container.innerHTML = await loadApprovalsView();
             } else if (view === 'provisioning') {
                 container.innerHTML = await loadProvisioningView();
@@ -1335,6 +1363,12 @@
         }
 
         function renderMyAccessView(isManager = false) {
+            // Categorize requests by status
+            const pendingRequests = myRequests.filter(r => r.status === 'requested');
+            const approvedRequests = myRequests.filter(r => r.status === 'approved');
+            const rejectedRequests = myRequests.filter(r => r.status === 'rejected');
+            const activeGrants = myGrants.filter(g => g.status === 'active');
+
             return `
                 <div>
                     <!-- Header Section -->
@@ -1351,69 +1385,156 @@
                                     </svg>
                                     Request Access
                                 </button>
-                                <button class="btn btn-outline" onclick="showCopyFromUserForm()">
-                                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin-right: 6px;">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-                                    </svg>
-                                    Copy from User
-                                </button>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Access Grants Section -->
-                    <div style="margin-bottom: 48px;">
-                <div class="section-header">
-                    <div class="section-header-icon">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
-                        </svg>
+                    <!-- Current Access Section -->
+                    <div style="margin-bottom: 32px;">
+                        <div class="section-header">
+                            <div class="section-header-icon" style="background: #22c55e20; color: #22c55e;">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                                </svg>
+                            </div>
+                            <div class="section-header-text">
+                                <h2>Current Access</h2>
+                                <p>Your active system access permissions</p>
+                            </div>
+                            <span class="section-count" style="background: #22c55e20; color: #22c55e;">${activeGrants.length}</span>
+                        </div>
+                        <div id="my-grants-list">
+                            ${renderMyGrantsList()}
+                        </div>
                     </div>
-                    <div class="section-header-text">
-                        <h2>Current Access</h2>
-                        <p>Your active system access permissions</p>
-                    </div>
-                    <span class="section-count">${myGrants.length}</span>
-                </div>
-                <div id="my-grants-list">
-                    ${renderMyGrantsList()}
-                </div>
-            </div>
 
-            <!-- Access Requests Section - HIDE for managers, they use the Approvals tab -->
-            ${isManager !== true ? `
-            <div>
-                <div class="section-header">
-                    <div class="section-header-icon">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                        </svg>
+                    <!-- Pending Requests Section -->
+                    ${pendingRequests.length > 0 ? `
+                    <div style="margin-bottom: 32px;">
+                        <div class="section-header">
+                            <div class="section-header-icon" style="background: #f59e0b20; color: #f59e0b;">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                            <div class="section-header-text">
+                                <h2>Pending Requests</h2>
+                                <p>Awaiting manager approval</p>
+                            </div>
+                            <span class="section-count" style="background: #f59e0b20; color: #f59e0b;">${pendingRequests.length}</span>
+                        </div>
+                        <div class="card">
+                            ${pendingRequests.map(req => renderRequestCard(req, 'pending')).join('')}
+                        </div>
                     </div>
-                    <div class="section-header-text">
-                        <h2>Access Requests</h2>
-                        <p>Track your access request status</p>
+                    ` : ''}
+
+                    <!-- Approved Requests Section (awaiting provisioning) -->
+                    ${approvedRequests.length > 0 ? `
+                    <div style="margin-bottom: 32px;">
+                        <div class="section-header">
+                            <div class="section-header-icon" style="background: #3b82f620; color: #3b82f6;">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                            <div class="section-header-text">
+                                <h2>Approved</h2>
+                                <p>Awaiting provisioning by system owner</p>
+                            </div>
+                            <span class="section-count" style="background: #3b82f620; color: #3b82f6;">${approvedRequests.length}</span>
+                        </div>
+                        <div class="card">
+                            ${approvedRequests.map(req => renderRequestCard(req, 'approved')).join('')}
+                        </div>
                     </div>
-                    <span class="section-count">${myRequests.length}</span>
+                    ` : ''}
+
+                    <!-- Rejected Requests Section -->
+                    ${rejectedRequests.length > 0 ? `
+                    <div style="margin-bottom: 32px;">
+                        <div class="section-header">
+                            <div class="section-header-icon" style="background: #ef444420; color: #ef4444;">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                            <div class="section-header-text">
+                                <h2>Rejected</h2>
+                                <p>Requests that were not approved</p>
+                            </div>
+                            <span class="section-count" style="background: #ef444420; color: #ef4444;">${rejectedRequests.length}</span>
+                        </div>
+                        <div class="card">
+                            ${rejectedRequests.map(req => renderRequestCard(req, 'rejected')).join('')}
+                        </div>
+                    </div>
+                    ` : ''}
+
+                    <!-- Empty state if no requests at all -->
+                    ${myRequests.length === 0 ? `
+                    <div style="margin-bottom: 32px;">
+                        <div class="section-header">
+                            <div class="section-header-icon">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                            </div>
+                            <div class="section-header-text">
+                                <h2>Access Requests</h2>
+                                <p>You haven't made any access requests yet</p>
+                            </div>
+                        </div>
+                    </div>
+                    ` : ''}
                 </div>
-                <div style="margin-bottom: 16px; display: flex; gap: 12px; align-items: center;">
-                    <select id="request-status-filter" class="input" style="width: auto; min-width: 150px;" onchange="filterMyRequests()">
-                        <option value="">All Statuses</option>
-                        <option value="requested">Requested</option>
-                        <option value="approved">Approved</option>
-                        <option value="rejected">Rejected</option>
-                    </select>
-                    <select id="request-sort" class="input" style="width: auto; min-width: 150px;" onchange="sortMyRequests()">
-                        <option value="date-desc">Newest First</option>
-                        <option value="date-asc">Oldest First</option>
-                    </select>
+            `;
+        }
+
+        function renderRequestCard(request, status) {
+            const firstItem = request.items?.[0];
+            const systemName = firstItem?.systemInstance?.system?.name || 'Unknown System';
+            const instanceName = firstItem?.systemInstance?.name || 'Unknown Instance';
+            const tierName = firstItem?.accessTier?.name || 'Unknown Tier';
+            const requestDate = new Date(request.createdAt).toLocaleDateString('en-US', {
+                year: 'numeric', month: 'short', day: 'numeric'
+            });
+            const note = request.note || '';
+
+            let statusBadge = '';
+            let statusInfo = '';
+
+            if (status === 'pending') {
+                statusBadge = '<span style="background: #f59e0b20; color: #f59e0b; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 500;">Pending</span>';
+                statusInfo = 'Waiting for manager approval';
+            } else if (status === 'approved') {
+                statusBadge = '<span style="background: #3b82f620; color: #3b82f6; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 500;">Approved</span>';
+                statusInfo = 'Waiting for system owner to provision access';
+            } else if (status === 'rejected') {
+                statusBadge = '<span style="background: #ef444420; color: #ef4444; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 500;">Rejected</span>';
+                statusInfo = request.rejectionReason || 'Request was not approved';
+            }
+
+            return `
+                <div style="padding: 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+                    <div style="flex: 1;">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 4px;">
+                            <span style="font-weight: 600;">${systemName}</span>
+                            ${statusBadge}
+                        </div>
+                        <div style="color: var(--muted-foreground); font-size: 14px;">
+                            ${instanceName} • ${tierName}
+                        </div>
+                        <div style="color: var(--muted-foreground); font-size: 13px; margin-top: 4px;">
+                            ${statusInfo}
+                        </div>
+                        ${note ? `<div style="color: var(--muted-foreground); font-size: 13px; font-style: italic; margin-top: 4px;">"${note}"</div>` : ''}
+                    </div>
+                    <div style="text-align: right; color: var(--muted-foreground); font-size: 13px;">
+                        ${requestDate}
+                    </div>
                 </div>
-                <div id="my-requests-list">
-                    ${renderMyRequestsList()}
-                </div>
-            </div>
-            ` : ''}
-        </div>
-    `;
+            `;
         }
 
         function filterMyGrants() {
@@ -2725,18 +2846,16 @@
         }
 
         async function deleteGrant(grantId) {
-            if (!confirm('Are you sure you want to remove this access grant?')) return;
-
             try {
                 const token = localStorage.getItem('authToken');
-                
+
                 // Get grant details BEFORE deletion
                 const grant = grants.find(g => g.id === grantId);
                 const systemName = grant?.systemInstance?.system?.name || 'System';
                 const instanceName = grant?.systemInstance?.name || 'Instance';
                 const tierName = grant?.accessTier?.name || 'Tier';
                 const userName = grant?.user?.name || 'User';
-                
+
                 const response = await fetch(`${API_BASE}/api/v1/access-grants/${grantId}/status`, {
                     method: 'PATCH',
                     headers: {
@@ -2747,22 +2866,24 @@
                 });
 
                 if (response.ok) {
-                    addAuditEntry('remove', userName, systemName, instanceName, tierName, 
+                    addAuditEntry('remove', userName, systemName, instanceName, tierName,
                         `Removed access: ${systemName} (${instanceName}) - ${tierName} from ${userName}`);
-                    
+
+                    showToast('Access Removed', `Access to ${systemName} has been removed from ${userName}`, 'success');
+
                     // Reload grants and refresh view
                     const grantsResp = await fetch(`${API_BASE}/api/v1/access-overview?page=1&limit=1000&status=active`);
                     const grantsData = await grantsResp.json();
                     grants = grantsData.data || [];
-                    
+
                     // Refresh the users view
                     loadView('users');
                 } else {
                     const data = await response.json();
-                    alert('Error: ' + (data.message || 'Failed to remove grant'));
+                    showToast('Error', data.message || 'Failed to remove grant', 'error');
                 }
             } catch (error) {
-                alert('Error: ' + error.message);
+                showToast('Error', error.message, 'error');
             }
         }
 
@@ -4525,7 +4646,7 @@
             event.preventDefault();
             const reason = document.getElementById('reject-reason').value;
             if (!reason.trim()) {
-                alert('Please provide a reason for rejection');
+                showToast('Error', 'Please provide a reason for rejection', 'error');
                 return;
             }
 
@@ -4679,7 +4800,7 @@
                                                 <td style="padding: 12px;">${approvedDate}</td>
                                                 <td style="padding: 12px;">
                                                     <button class="btn btn-sm btn-primary" onclick="provisionItem('${item.id}')">Provision</button>
-                                                    <button class="btn btn-sm" style="background: var(--destructive); color: white; margin-left: 8px;" onclick="rejectProvisionItem('${item.accessRequest?.id}', '${item.id}')">Reject</button>
+                                                    <button class="btn btn-sm" style="background: var(--destructive); color: white; margin-left: 8px;" onclick="showRejectProvisionModal('${item.accessRequest?.id}', '${item.id}')">Reject</button>
                                                 </td>
                                             </tr>
                                         `;
@@ -4699,10 +4820,6 @@
         }
 
         async function provisionItem(itemId) {
-            if (!confirm('Provision this access request? This will create an active grant.')) {
-                return;
-            }
-
             try {
                 const token = localStorage.getItem('authToken');
                 const response = await fetch(`${API_BASE}/api/v1/access-requests/items/${itemId}/provision`, {
@@ -4718,25 +4835,44 @@
                     throw new Error(error.message || 'Failed to provision item');
                 }
 
-                alert('Access provisioned successfully!');
+                showToast('Access Provisioned', 'The access grant has been created and is now active.', 'success');
                 loadProvisioningView().then(html => {
                     document.getElementById('view-container').innerHTML = html;
                 });
                 updateProvisioningBadge();
             } catch (error) {
-                alert(`Error: ${error.message}`);
+                showToast('Error', error.message, 'error');
                 console.error('Provision error:', error);
             }
         }
 
-        async function rejectProvisionItem(requestId, itemId) {
-            const reason = prompt('Please provide a reason for rejecting this approved item:');
-            if (!reason || reason.trim() === '') {
-                alert('A reason is required to reject an item');
-                return;
-            }
+        function showRejectProvisionModal(requestId, itemId) {
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center;';
+            modal.innerHTML = `
+                <div class="modal-content" style="background: var(--card); border-radius: 8px; padding: 24px; width: 90%; max-width: 500px;">
+                    <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 16px;">Reject Approved Request</h3>
+                    <form id="reject-provision-form" onsubmit="handleRejectProvision(event, '${requestId}', '${itemId}')">
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Reason for rejection *</label>
+                            <textarea id="reject-provision-reason" class="input" required rows="4" placeholder="Please provide a reason for rejection..."></textarea>
+                        </div>
+                        <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                            <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancel</button>
+                            <button type="submit" class="btn" style="background: var(--destructive); color: white;">Reject Request</button>
+                        </div>
+                    </form>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
 
-            if (!confirm(`Reject this approved access request item? This will mark it as rejected.`)) {
+        async function handleRejectProvision(event, requestId, itemId) {
+            event.preventDefault();
+            const reason = document.getElementById('reject-provision-reason').value;
+            if (!reason.trim()) {
+                showToast('Error', 'Please provide a reason for rejection', 'error');
                 return;
             }
 
@@ -4756,13 +4892,14 @@
                     throw new Error(error.message || 'Failed to reject item');
                 }
 
-                alert('Item rejected successfully!');
+                event.target.closest('.modal').remove();
+                showToast('Request Rejected', 'The approved request has been rejected. The requester has been notified.', 'success');
                 loadProvisioningView().then(html => {
                     document.getElementById('view-container').innerHTML = html;
                 });
                 updateProvisioningBadge();
             } catch (error) {
-                alert(`Error: ${error.message}`);
+                showToast('Error', error.message, 'error');
                 console.error('Reject error:', error);
             }
         }
@@ -4770,11 +4907,7 @@
         async function bulkProvision() {
             const selected = Array.from(document.querySelectorAll('.provision-checkbox:checked')).map(cb => cb.value);
             if (selected.length === 0) {
-                alert('Please select at least one item to provision');
-                return;
-            }
-
-            if (!confirm(`Provision ${selected.length} access request item(s)?`)) {
+                showToast('No Items Selected', 'Please select at least one item to provision', 'info');
                 return;
             }
 
@@ -4795,13 +4928,19 @@
                 }
 
                 const result = await response.json();
-                alert(`Successfully provisioned ${result.successful?.length || 0} item(s). ${result.failed?.length || 0} failed.`);
+                const successCount = result.successful?.length || 0;
+                const failCount = result.failed?.length || 0;
+                if (failCount > 0) {
+                    showToast('Bulk Provision Complete', `${successCount} provisioned, ${failCount} failed`, failCount > successCount ? 'error' : 'success');
+                } else {
+                    showToast('Bulk Provision Complete', `Successfully provisioned ${successCount} item(s)`, 'success');
+                }
                 loadProvisioningView().then(html => {
                     document.getElementById('view-container').innerHTML = html;
                 });
                 updateProvisioningBadge();
             } catch (error) {
-                alert(`Error: ${error.message}`);
+                showToast('Error', error.message, 'error');
                 console.error('Bulk provision error:', error);
             }
         }
