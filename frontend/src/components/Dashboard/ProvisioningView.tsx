@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { CheckCircle2, XCircle, Clock, Shield } from 'lucide-react';
+import { CheckCircle2, XCircle, Clock, Shield, Package } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
 import { formatDate } from '../../lib/utils';
@@ -166,41 +166,47 @@ export default function ProvisioningView() {
     );
   }
 
-  if (items.length === 0) {
-    return (
-      <motion.div
-        initial={{ opacity: 0, scale: 0.98 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-12 text-center"
-      >
-        <div className="w-16 h-16 mx-auto mb-6 rounded-lg border border-white/[0.1] bg-white/[0.02] flex items-center justify-center">
-          <CheckCircle2 size={28} className="text-white/40" />
-        </div>
-        <h3 className="text-lg font-light text-white mb-2">All Caught Up</h3>
-        <p className="text-white/40 font-light text-sm">No pending requests at this time</p>
-      </motion.div>
-    );
-  }
-
   return (
     <div className="space-y-8">
+      {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-5"
+        className="flex items-center justify-between"
       >
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-xl font-light text-white mb-1 flex items-center gap-3">
-              <Shield size={20} className="text-white/60" />
-              Pending Provisions
-            </h3>
-            <p className="text-white/40 text-sm font-light">
-              {items.length} item(s) awaiting provisioning
-            </p>
-          </div>
+        <div>
+          <motion.h2
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.1 }}
+            className="text-2xl font-light text-white mb-1 flex items-center gap-3"
+          >
+            <Package className="text-white/60" size={24} />
+            Pending Provisions
+          </motion.h2>
+          <p className="text-white/40 text-sm font-light">
+            Provision access for approved requests
+          </p>
+        </div>
+        <div className="text-right">
+          <p className="text-2xl font-light text-emerald-400">{items.length}</p>
+          <p className="text-white/40 text-sm">Pending Items</p>
         </div>
       </motion.div>
+
+      {items.length === 0 ? (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.98 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-12 text-center"
+        >
+          <div className="w-16 h-16 mx-auto mb-6 rounded-lg border border-white/[0.1] bg-white/[0.02] flex items-center justify-center">
+            <CheckCircle2 size={28} className="text-white/40" />
+          </div>
+          <h3 className="text-lg font-light text-white mb-2">All Caught Up</h3>
+          <p className="text-white/40 font-light text-sm">No pending requests at this time</p>
+        </motion.div>
+      ) : (
 
       <div className="grid gap-4">
         {items.map((item, index) => (
@@ -280,6 +286,7 @@ export default function ProvisioningView() {
           </motion.div>
         ))}
       </div>
+      )}
     </div>
   );
 }

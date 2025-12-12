@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, Plus, Copy, CheckCircle2, Clock, XCircle, X } from 'lucide-react';
+import { Shield, Plus, Copy, CheckCircle2, Clock, XCircle, X, Search, Filter } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToast } from '../../contexts/ToastContext';
 import { formatDate } from '../../lib/utils';
@@ -70,6 +70,8 @@ export default function MyAccessView() {
   const [grants, setGrants] = useState<AccessGrant[]>([]);
   const [requests, setRequests] = useState<AccessRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
 
   // Modal states
   const [showRequestModal, setShowRequestModal] = useState(false);
@@ -84,7 +86,6 @@ export default function MyAccessView() {
   const [selectedInstance, setSelectedInstance] = useState('');
   const [selectedTier, setSelectedTier] = useState('');
   const [selectedUser, setSelectedUser] = useState('');
-  const [justification, setJustification] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   // Copy from User form state
@@ -127,31 +128,67 @@ export default function MyAccessView() {
   };
 
   const activeGrants = useMemo(() => {
-    return grants.filter(grant => grant.status.toLowerCase() === 'active');
-  }, [grants]);
+    let filtered = grants.filter(grant => grant.status.toLowerCase() === 'active');
+
+    if (searchTerm) {
+      const search = searchTerm.toLowerCase();
+      filtered = filtered.filter(grant =>
+        grant.systemInstance?.system?.name?.toLowerCase().includes(search) ||
+        grant.systemInstance?.name?.toLowerCase().includes(search) ||
+        grant.accessTier?.name?.toLowerCase().includes(search)
+      );
+    }
+
+    return filtered;
+  }, [grants, searchTerm]);
 
   const pendingRequests = useMemo(() => {
-    return requests.filter(request => {
+    let filtered = requests.filter(request => {
       const status = request.status.toLowerCase();
-      // Only show "requested" status - once approved, it's no longer pending from user's perspective
       return status === 'requested';
     });
-  }, [requests]);
+
+    if (searchTerm) {
+      const search = searchTerm.toLowerCase();
+      filtered = filtered.filter(request =>
+        request.items.some(item =>
+          item.systemInstance?.system?.name?.toLowerCase().includes(search) ||
+          item.systemInstance?.name?.toLowerCase().includes(search) ||
+          item.accessTier?.name?.toLowerCase().includes(search)
+        )
+      );
+    }
+
+    return filtered;
+  }, [requests, searchTerm]);
 
   const rejectedRequests = useMemo(() => {
-    return requests.filter(request => request.status.toLowerCase() === 'rejected');
-  }, [requests]);
+    let filtered = requests.filter(request => request.status.toLowerCase() === 'rejected');
+
+    if (searchTerm) {
+      const search = searchTerm.toLowerCase();
+      filtered = filtered.filter(request =>
+        request.items.some(item =>
+          item.systemInstance?.system?.name?.toLowerCase().includes(search) ||
+          item.systemInstance?.name?.toLowerCase().includes(search) ||
+          item.accessTier?.name?.toLowerCase().includes(search)
+        )
+      );
+    }
+
+    return filtered;
+  }, [requests, searchTerm]);
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case 'active':
-        return 'bg-white/[0.03] text-white/70 border-white/[0.1]';
+        return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
       case 'requested':
-        return 'bg-white/[0.03] text-white/60 border-white/[0.08]';
+        return 'bg-amber-500/10 text-amber-400 border-amber-500/20';
       case 'approved':
-        return 'bg-white/[0.03] text-white/70 border-white/[0.1]';
+        return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20';
       case 'rejected':
-        return 'bg-white/[0.03] text-white/50 border-white/[0.06]';
+        return 'bg-red-500/10 text-red-400 border-red-500/20';
       default:
         return 'bg-white/[0.02] text-white/50 border-white/[0.06]';
     }
@@ -160,13 +197,13 @@ export default function MyAccessView() {
   const getStatusIcon = (status: string) => {
     switch (status.toLowerCase()) {
       case 'active':
-        return <CheckCircle2 size={14} />;
+        return <CheckCircle2 size={14} className="text-emerald-400" />;
       case 'requested':
-        return <Clock size={14} />;
+        return <Clock size={14} className="text-amber-400" />;
       case 'approved':
-        return <CheckCircle2 size={14} />;
+        return <CheckCircle2 size={14} className="text-emerald-400" />;
       case 'rejected':
-        return <XCircle size={14} />;
+        return <XCircle size={14} className="text-red-400" />;
       default:
         return null;
     }
@@ -256,21 +293,13 @@ export default function MyAccessView() {
         'Content-Type': 'application/json',
       };
 
-      const requestBody: {
-        targetUserId: string;
-        items: Array<{ systemInstanceId: string; accessTierId: string }>;
-        note?: string;
-      } = {
+      const requestBody = {
         targetUserId: selectedUser,
         items: [{
           systemInstanceId: selectedInstance,
           accessTierId: selectedTier,
         }],
       };
-
-      if (justification.trim()) {
-        requestBody.note = justification.trim();
-      }
 
       const response = await fetch(`${API_BASE}/api/v1/access-requests`, {
         method: 'POST',
@@ -307,7 +336,6 @@ export default function MyAccessView() {
     setSelectedInstance('');
     setSelectedTier('');
     setSelectedUser(user?.id || '');
-    setJustification('');
     setInstances([]);
     setTiers([]);
   };
@@ -519,7 +547,43 @@ export default function MyAccessView() {
         </div>
       </motion.div>
 
+      {/* Search and Filter */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="flex flex-wrap gap-4"
+      >
+        {/* Search */}
+        <div className="relative flex-1 min-w-[200px]">
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40" />
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search by system, instance, or tier..."
+            className="w-full pl-10 pr-4 py-2.5 bg-white/[0.03] border border-white/[0.08] rounded-lg text-white placeholder-white/30 focus:border-white/20 focus:outline-none transition-colors text-sm"
+          />
+        </div>
+
+        {/* Status Filter */}
+        <div className="flex items-center gap-2">
+          <Filter size={16} className="text-white/40" />
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="px-4 py-2.5 bg-white/[0.03] border border-white/[0.08] rounded-lg text-white focus:border-white/20 focus:outline-none transition-colors text-sm"
+          >
+            <option value="all">All Sections</option>
+            <option value="active">Current Access Only</option>
+            <option value="pending">Pending Only</option>
+            <option value="rejected">Rejected Only</option>
+          </select>
+        </div>
+      </motion.div>
+
       {/* Section 1: Current Access */}
+      {(statusFilter === 'all' || statusFilter === 'active') && (
       <div>
         <h3 className="text-sm font-medium text-white/60 mb-4 flex items-center gap-2 uppercase tracking-[0.1em]">
           <Shield size={16} className="text-white/40" />
@@ -594,8 +658,10 @@ export default function MyAccessView() {
           )}
         </AnimatePresence>
       </div>
+      )}
 
       {/* Section 2: Pending Requests */}
+      {(statusFilter === 'all' || statusFilter === 'pending') && (
       <div>
         <h3 className="text-sm font-medium text-white/60 mb-4 flex items-center gap-2 uppercase tracking-[0.1em]">
           <Clock size={16} className="text-white/40" />
@@ -658,8 +724,10 @@ export default function MyAccessView() {
           )}
         </AnimatePresence>
       </div>
+      )}
 
       {/* Section 3: Rejected Requests */}
+      {(statusFilter === 'all' || statusFilter === 'rejected') && (
       <div>
         <h3 className="text-sm font-medium text-white/60 mb-4 flex items-center gap-2 uppercase tracking-[0.1em]">
           <XCircle size={16} className="text-white/40" />
@@ -722,6 +790,7 @@ export default function MyAccessView() {
           )}
         </AnimatePresence>
       </div>
+      )}
 
       {/* Request Access Modal */}
       <AnimatePresence>
@@ -860,20 +929,6 @@ export default function MyAccessView() {
                       })
                     )}
                   </div>
-                </div>
-
-                {/* Justification */}
-                <div>
-                  <label className="block text-sm font-medium text-white/70 mb-2">
-                    Justification (Optional)
-                  </label>
-                  <textarea
-                    value={justification}
-                    onChange={(e) => setJustification(e.target.value)}
-                    placeholder="Why do you need this access?"
-                    rows={2}
-                    className="w-full px-4 py-3 bg-white/[0.03] border border-white/[0.08] rounded-lg text-white placeholder-white/30 focus:border-white/20 focus:outline-none transition-colors resize-none"
-                  />
                 </div>
 
                 {/* Actions */}

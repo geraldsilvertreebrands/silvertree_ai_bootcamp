@@ -466,7 +466,14 @@ export class AccessRequestService {
     // Update request status if all items rejected
     const request = await this.accessRequestRepository.findOne({
       where: { id: item.accessRequestId },
-      relations: ['items', 'requester', 'targetUser'],
+      relations: [
+        'items',
+        'items.systemInstance',
+        'items.systemInstance.system',
+        'items.accessTier',
+        'requester',
+        'targetUser',
+      ],
     });
     if (request) {
       const allRejected = request.items.every((i) => i.status === AccessRequestItemStatus.REJECTED);

@@ -56,7 +56,7 @@ async function testEndToEndNotifications() {
 
     const instancesResp = await axios.get(`${API_BASE}/api/v1/systems/${system.id}/instances`);
     const instances = instancesResp.data.data || instancesResp.data || [];
-    const instance = instances.find((i: any) => i.name === 'SKOON Staging') || instances[0];
+    const instance = instances.find((i: any) => i.name === 'Pet Heaven Staging') || instances[0];
 
     const tiersResp = await axios.get(`${API_BASE}/api/v1/systems/${system.id}/access-tiers`);
     const tiers = tiersResp.data.data || tiersResp.data || [];

@@ -171,7 +171,7 @@ export default function UsersView() {
           </p>
         </div>
         <div className="text-right">
-          <p className="text-2xl font-light text-white">{users.length}</p>
+          <p className="text-2xl font-light text-emerald-400">{users.length}</p>
           <p className="text-white/40 text-sm">Total Users</p>
         </div>
       </motion.div>

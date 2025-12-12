@@ -150,7 +150,7 @@ export default function AuditLogView() {
           </p>
         </div>
         <div className="text-right">
-          <p className="text-2xl font-light text-white">{total}</p>
+          <p className="text-2xl font-light text-emerald-400">{total}</p>
           <p className="text-white/40 text-sm">Total Events</p>
         </div>
       </motion.div>

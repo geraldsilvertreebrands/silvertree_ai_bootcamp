@@ -24,7 +24,7 @@ const seedSystems = [
   { name: 'Freshdesk', description: 'Customer support and ticketing system' },
   { name: 'Acumatica', description: 'ERP system for financial and inventory management' },
   { name: 'n8n', description: 'Workflow automation platform' },
-  { name: 'Bitquery', description: 'Blockchain data and analytics' },
+  { name: 'BigQuery', description: 'Data warehouse and analytics' },
 ];
 
 export async function seedDatabase(dataSource: DataSource) {
@@ -331,27 +331,27 @@ export async function seedDatabase(dataSource: DataSource) {
     'Magento': [
       { name: 'Faithful to Nature', region: 'ZA', environment: 'production' },
       { name: 'UCOOK', region: 'ZA', environment: 'production' },
-      { name: 'SKOON', region: 'ZA', environment: 'production' },
+      { name: 'Pet Heaven', region: 'ZA', environment: 'production' },
     ],
     'Freshdesk': [
       { name: 'Faithful to Nature', region: 'ZA', environment: 'production' },
       { name: 'UCOOK', region: 'ZA', environment: 'production' },
-      { name: 'SKOON', region: 'ZA', environment: 'production' },
+      { name: 'Pet Heaven', region: 'ZA', environment: 'production' },
     ],
     'Acumatica': [
       { name: 'Faithful to Nature', region: 'ZA', environment: 'production' },
       { name: 'UCOOK', region: 'ZA', environment: 'production' },
-      { name: 'SKOON', region: 'ZA', environment: 'production' },
+      { name: 'Pet Heaven', region: 'ZA', environment: 'production' },
     ],
     'n8n': [
       { name: 'Faithful to Nature', region: 'ZA', environment: 'production' },
       { name: 'UCOOK', region: 'ZA', environment: 'production' },
-      { name: 'SKOON', region: 'ZA', environment: 'production' },
+      { name: 'Pet Heaven', region: 'ZA', environment: 'production' },
     ],
-    'Bitquery': [
+    'BigQuery': [
       { name: 'Faithful to Nature', region: 'ZA', environment: 'production' },
       { name: 'UCOOK', region: 'ZA', environment: 'production' },
-      { name: 'SKOON', region: 'ZA', environment: 'production' },
+      { name: 'Pet Heaven', region: 'ZA', environment: 'production' },
     ],
   };
   
@@ -402,7 +402,7 @@ export async function seedDatabase(dataSource: DataSource) {
       { name: 'Regular', description: 'Standard user access' },
       { name: 'Admin', description: 'Full administrative access' },
     ],
-    'Bitquery': [
+    'BigQuery': [
       { name: 'Regular', description: 'Standard user access' },
       { name: 'Admin', description: 'Full administrative access' },
     ],
@@ -463,8 +463,8 @@ export async function seedDatabase(dataSource: DataSource) {
     { userIndex: 2, systemName: 'Magento', instanceName: 'Faithful to Nature', tierName: 'Regular' }, // Alex van der Merwe
     { userIndex: 3, systemName: 'Freshdesk', instanceName: 'UCOOK', tierName: 'Regular' }, // Jane Botha
     { userIndex: 4, systemName: 'n8n', instanceName: 'Faithful to Nature', tierName: 'Admin' }, // Sipho Ndlovu
-    { userIndex: 5, systemName: 'Bitquery', instanceName: 'SKOON', tierName: 'Regular' }, // Lerato Mthembu
-    { userIndex: 6, systemName: 'Magento', instanceName: 'SKOON', tierName: 'Regular' }, // Gerald Adams
+    { userIndex: 5, systemName: 'BigQuery', instanceName: 'Pet Heaven', tierName: 'Regular' }, // Lerato Mthembu
+    { userIndex: 6, systemName: 'Magento', instanceName: 'Pet Heaven', tierName: 'Regular' }, // Gerald Adams
     { userIndex: 7, systemName: 'Acumatica', instanceName: 'UCOOK', tierName: 'Regular' }, // Emma Wilson
     { userIndex: 8, systemName: 'Freshdesk', instanceName: 'Faithful to Nature', tierName: 'Regular' }, // Michael Chen
     { userIndex: 9, systemName: 'Magento', instanceName: 'UCOOK', tierName: 'Admin' }, // David van Niekerk - Manager

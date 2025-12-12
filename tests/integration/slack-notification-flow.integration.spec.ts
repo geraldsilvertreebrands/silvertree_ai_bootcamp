@@ -97,7 +97,7 @@ describe('Slack Notification Flow (TDD)', () => {
             systemInstanceId: 'inst-1',
             systemInstance: {
               id: 'inst-1',
-              name: 'SKOON Staging',
+              name: 'Pet Heaven Staging',
               systemId: 'sys-1',
               system: { id: 'sys-1', name: 'Shopify' },
             },
@@ -140,7 +140,7 @@ describe('Slack Notification Flow (TDD)', () => {
       const fieldsBlock = blocks.find(b => b.type === 'section' && b.fields);
       expect(fieldsBlock.fields).toHaveLength(4);
       expect(fieldsBlock.fields[0].text).toContain('Shopify'); // System
-      expect(fieldsBlock.fields[1].text).toContain('SKOON Staging'); // Instance
+      expect(fieldsBlock.fields[1].text).toContain('Pet Heaven Staging'); // Instance
       expect(fieldsBlock.fields[2].text).toContain('Admin'); // Access Level
       expect(fieldsBlock.fields[3].text).toContain('Test justification'); // Justification
     });
@@ -193,7 +193,7 @@ describe('Slack Notification Flow (TDD)', () => {
             systemInstanceId: 'inst-1',
             systemInstance: {
               id: 'inst-1',
-              name: 'SKOON Staging',
+              name: 'Pet Heaven Staging',
               systemId: 'sys-1',
               system: { id: 'sys-1', name: 'Shopify' },
             },
@@ -237,7 +237,7 @@ describe('Slack Notification Flow (TDD)', () => {
       expect(fieldsBlock.fields).toBeDefined();
       expect(fieldsBlock.fields.length).toBe(3); // System, Instance, Access Level
       expect(fieldsBlock.fields[0].text).toContain('Shopify'); // System
-      expect(fieldsBlock.fields[1].text).toContain('SKOON Staging'); // Instance
+      expect(fieldsBlock.fields[1].text).toContain('Pet Heaven Staging'); // Instance
       expect(fieldsBlock.fields[2].text).toContain('Admin'); // Access Level
     });
 
@@ -259,7 +259,7 @@ describe('Slack Notification Flow (TDD)', () => {
             systemInstanceId: 'inst-1',
             systemInstance: {
               id: 'inst-1',
-              name: 'SKOON Staging',
+              name: 'Pet Heaven Staging',
               systemId: 'sys-1',
               system: { id: 'sys-1', name: 'Shopify' },
             },
