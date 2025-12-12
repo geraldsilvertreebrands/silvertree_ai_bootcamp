@@ -31,48 +31,81 @@ const brandLogos = [
   }
 ];
 
-// Orbital blocks (3 concentric orbits)
+// Orbital blocks (5 concentric orbits) - parallelograms tangent to orbit
+// Colors: dark browns, purples, greys - high opacity
 const orbitalBlocks = [
-  // Inner orbit (6 blocks)
-  { id: 1, ring: 1, angle: -8, size: 14, speed: 68, shade: 'rgba(100, 100, 100, 0.18)' },
-  { id: 2, ring: 1, angle: 59, size: 12, speed: 71, shade: 'rgba(120, 120, 120, 0.15)' },
-  { id: 3, ring: 1, angle: 138, size: 16, speed: 66, shade: 'rgba(90, 90, 90, 0.20)' },
-  { id: 4, ring: 1, angle: 205, size: 13, speed: 69, shade: 'rgba(110, 110, 110, 0.16)' },
-  { id: 5, ring: 1, angle: 276, size: 15, speed: 65, shade: 'rgba(95, 95, 95, 0.19)' },
-  { id: 6, ring: 1, angle: 341, size: 13, speed: 72, shade: 'rgba(98, 98, 98, 0.18)' },
+  // Ring 1 - innermost (6 blocks) - speeds increased ~43% for 30% slower
+  { id: 1, ring: 1, angle: -8, size: 14, speed: 89, shade: 'rgba(32, 22, 15, 0.85)' },      // dark brown
+  { id: 2, ring: 1, angle: 59, size: 12, speed: 112, shade: 'rgba(25, 20, 38, 0.82)' },     // dark purple
+  { id: 3, ring: 1, angle: 138, size: 16, speed: 83, shade: 'rgba(35, 35, 35, 0.84)' },     // dark grey
+  { id: 4, ring: 1, angle: 205, size: 13, speed: 104, shade: 'rgba(38, 28, 18, 0.80)' },    // dark brown
+  { id: 5, ring: 1, angle: 276, size: 15, speed: 93, shade: 'rgba(28, 22, 42, 0.83)' },     // dark purple
+  { id: 6, ring: 1, angle: 341, size: 13, speed: 100, shade: 'rgba(32, 32, 32, 0.82)' },    // dark grey
 
-  // Middle orbit (9 blocks)
-  { id: 7, ring: 2, angle: -3, size: 20, speed: 112, shade: 'rgba(85, 85, 85, 0.22)' },
-  { id: 8, ring: 2, angle: 49, size: 18, speed: 116, shade: 'rgba(115, 115, 115, 0.16)' },
-  { id: 9, ring: 2, angle: 103, size: 22, speed: 108, shade: 'rgba(95, 95, 95, 0.20)' },
-  { id: 10, ring: 2, angle: 158, size: 19, speed: 114, shade: 'rgba(100, 100, 100, 0.18)' },
-  { id: 11, ring: 2, angle: 212, size: 21, speed: 110, shade: 'rgba(90, 90, 90, 0.19)' },
-  { id: 12, ring: 2, angle: 267, size: 20, speed: 118, shade: 'rgba(110, 110, 110, 0.17)' },
-  { id: 13, ring: 2, angle: 314, size: 18, speed: 106, shade: 'rgba(105, 105, 105, 0.16)' },
-  { id: 14, ring: 2, angle: 357, size: 22, speed: 113, shade: 'rgba(86, 86, 86, 0.23)' },
-  { id: 15, ring: 2, angle: 404, size: 19, speed: 117, shade: 'rgba(110, 110, 110, 0.20)' },
+  // Ring 2 - between inner and middle (7 blocks)
+  { id: 7, ring: 2, angle: 15, size: 15, speed: 107, shade: 'rgba(35, 25, 18, 0.84)' },     // dark brown
+  { id: 8, ring: 2, angle: 68, size: 14, speed: 126, shade: 'rgba(28, 22, 40, 0.80)' },     // dark purple
+  { id: 9, ring: 2, angle: 120, size: 16, speed: 100, shade: 'rgba(33, 33, 33, 0.86)' },    // dark grey
+  { id: 10, ring: 2, angle: 175, size: 15, speed: 117, shade: 'rgba(40, 28, 20, 0.82)' },   // dark brown
+  { id: 11, ring: 2, angle: 230, size: 14, speed: 112, shade: 'rgba(30, 24, 44, 0.84)' },   // dark purple
+  { id: 12, ring: 2, angle: 285, size: 16, speed: 122, shade: 'rgba(38, 38, 38, 0.80)' },   // dark grey
+  { id: 13, ring: 2, angle: 335, size: 15, speed: 103, shade: 'rgba(34, 24, 16, 0.85)' },   // dark brown
 
-  // Outer orbit (12 blocks) - largest, slowest
-  { id: 16, ring: 3, angle: 5, size: 26, speed: 155, shade: 'rgba(75, 75, 75, 0.24)' },
-  { id: 17, ring: 3, angle: 35, size: 24, speed: 160, shade: 'rgba(105, 105, 105, 0.18)' },
-  { id: 18, ring: 3, angle: 68, size: 28, speed: 150, shade: 'rgba(85, 85, 85, 0.22)' },
-  { id: 19, ring: 3, angle: 100, size: 25, speed: 158, shade: 'rgba(95, 95, 95, 0.20)' },
-  { id: 20, ring: 3, angle: 135, size: 27, speed: 152, shade: 'rgba(80, 80, 80, 0.23)' },
-  { id: 21, ring: 3, angle: 168, size: 24, speed: 162, shade: 'rgba(110, 110, 110, 0.17)' },
-  { id: 22, ring: 3, angle: 200, size: 26, speed: 156, shade: 'rgba(90, 90, 90, 0.21)' },
-  { id: 23, ring: 3, angle: 235, size: 28, speed: 148, shade: 'rgba(78, 78, 78, 0.25)' },
-  { id: 24, ring: 3, angle: 268, size: 25, speed: 159, shade: 'rgba(100, 100, 100, 0.19)' },
-  { id: 25, ring: 3, angle: 300, size: 27, speed: 153, shade: 'rgba(88, 88, 88, 0.22)' },
-  { id: 26, ring: 3, angle: 332, size: 24, speed: 161, shade: 'rgba(105, 105, 105, 0.18)' },
-  { id: 27, ring: 3, angle: 362, size: 26, speed: 154, shade: 'rgba(82, 82, 82, 0.24)' },
+  // Ring 3 - middle (9 blocks)
+  { id: 14, ring: 3, angle: -3, size: 20, speed: 140, shade: 'rgba(30, 22, 14, 0.88)' },    // dark brown
+  { id: 15, ring: 3, angle: 49, size: 18, speed: 179, shade: 'rgba(24, 18, 36, 0.82)' },    // dark purple
+  { id: 16, ring: 3, angle: 103, size: 22, speed: 136, shade: 'rgba(35, 35, 35, 0.85)' },   // dark grey
+  { id: 17, ring: 3, angle: 158, size: 19, speed: 169, shade: 'rgba(42, 30, 20, 0.80)' },   // dark brown
+  { id: 18, ring: 3, angle: 212, size: 21, speed: 150, shade: 'rgba(28, 22, 42, 0.84)' },   // dark purple
+  { id: 19, ring: 3, angle: 267, size: 20, speed: 186, shade: 'rgba(32, 32, 32, 0.82)' },   // dark grey
+  { id: 20, ring: 3, angle: 314, size: 18, speed: 143, shade: 'rgba(36, 26, 16, 0.86)' },   // dark brown
+  { id: 21, ring: 3, angle: 357, size: 22, speed: 160, shade: 'rgba(26, 20, 40, 0.84)' },   // dark purple
+  { id: 22, ring: 3, angle: 404, size: 19, speed: 175, shade: 'rgba(40, 28, 18, 0.80)' },   // dark brown
+
+  // Ring 4 - between middle and outer (12 blocks)
+  { id: 23, ring: 4, angle: 8, size: 22, speed: 165, shade: 'rgba(32, 24, 16, 0.88)' },     // dark brown
+  { id: 24, ring: 4, angle: 38, size: 20, speed: 193, shade: 'rgba(24, 18, 38, 0.82)' },    // dark purple
+  { id: 25, ring: 4, angle: 68, size: 24, speed: 154, shade: 'rgba(35, 35, 35, 0.84)' },    // dark grey
+  { id: 26, ring: 4, angle: 98, size: 21, speed: 183, shade: 'rgba(42, 28, 18, 0.80)' },    // dark brown
+  { id: 27, ring: 4, angle: 128, size: 23, speed: 169, shade: 'rgba(30, 24, 44, 0.85)' },   // dark purple
+  { id: 28, ring: 4, angle: 158, size: 20, speed: 200, shade: 'rgba(32, 32, 32, 0.82)' },   // dark grey
+  { id: 29, ring: 4, angle: 188, size: 24, speed: 160, shade: 'rgba(36, 26, 16, 0.86)' },   // dark brown
+  { id: 30, ring: 4, angle: 218, size: 22, speed: 189, shade: 'rgba(26, 20, 40, 0.82)' },   // dark purple
+  { id: 31, ring: 4, angle: 248, size: 21, speed: 172, shade: 'rgba(30, 30, 30, 0.84)' },   // dark grey
+  { id: 32, ring: 4, angle: 278, size: 23, speed: 197, shade: 'rgba(34, 24, 14, 0.85)' },   // dark brown
+  { id: 33, ring: 4, angle: 308, size: 20, speed: 179, shade: 'rgba(28, 22, 42, 0.80)' },   // dark purple
+  { id: 34, ring: 4, angle: 338, size: 24, speed: 157, shade: 'rgba(38, 38, 38, 0.88)' },   // dark grey
+
+  // Ring 5 - outermost (18 blocks)
+  { id: 35, ring: 5, angle: 2, size: 26, speed: 207, shade: 'rgba(30, 20, 12, 0.90)' },     // dark brown
+  { id: 36, ring: 5, angle: 23, size: 24, speed: 246, shade: 'rgba(24, 18, 36, 0.84)' },    // dark purple
+  { id: 37, ring: 5, angle: 41, size: 28, speed: 197, shade: 'rgba(33, 33, 33, 0.88)' },    // dark grey
+  { id: 38, ring: 5, angle: 64, size: 25, speed: 236, shade: 'rgba(42, 28, 18, 0.82)' },    // dark brown
+  { id: 39, ring: 5, angle: 83, size: 27, speed: 215, shade: 'rgba(30, 24, 44, 0.86)' },    // dark purple
+  { id: 40, ring: 5, angle: 107, size: 24, speed: 255, shade: 'rgba(35, 35, 35, 0.80)' },   // dark grey
+  { id: 41, ring: 5, angle: 128, size: 26, speed: 203, shade: 'rgba(36, 26, 16, 0.85)' },   // dark brown
+  { id: 42, ring: 5, angle: 151, size: 28, speed: 240, shade: 'rgba(26, 20, 40, 0.88)' },   // dark purple
+  { id: 43, ring: 5, angle: 169, size: 25, speed: 222, shade: 'rgba(30, 30, 30, 0.82)' },   // dark grey
+  { id: 44, ring: 5, angle: 192, size: 27, speed: 265, shade: 'rgba(34, 24, 14, 0.84)' },   // dark brown
+  { id: 45, ring: 5, angle: 214, size: 24, speed: 212, shade: 'rgba(28, 22, 42, 0.82)' },   // dark purple
+  { id: 46, ring: 5, angle: 237, size: 26, speed: 250, shade: 'rgba(35, 35, 35, 0.86)' },   // dark grey
+  { id: 47, ring: 5, angle: 259, size: 25, speed: 193, shade: 'rgba(40, 28, 18, 0.80)' },   // dark brown
+  { id: 48, ring: 5, angle: 283, size: 28, speed: 232, shade: 'rgba(24, 18, 36, 0.88)' },   // dark purple
+  { id: 49, ring: 5, angle: 304, size: 24, speed: 217, shade: 'rgba(32, 32, 32, 0.84)' },   // dark grey
+  { id: 50, ring: 5, angle: 327, size: 27, speed: 257, shade: 'rgba(36, 26, 16, 0.82)' },   // dark brown
+  { id: 51, ring: 5, angle: 347, size: 26, speed: 200, shade: 'rgba(30, 24, 42, 0.85)' },   // dark purple
+  { id: 52, ring: 5, angle: 371, size: 25, speed: 243, shade: 'rgba(34, 24, 14, 0.88)' },   // dark brown
 ];
 
 const getRingRadius = (ring: number) => {
+  // Distance increases gradually as we go out
   switch (ring) {
-    case 1: return 230; // Inner orbit
-    case 2: return 420; // Middle orbit
-    case 3: return 620; // Outer orbit - extends to edges
-    default: return 120;
+    case 1: return 320;  // Innermost
+    case 2: return 328;  // 8px gap
+    case 3: return 365;  // 37px gap
+    case 4: return 420;  // 55px gap
+    case 5: return 500;  // 80px gap
+    default: return 320;
   }
 };
 
@@ -109,14 +142,26 @@ export default function Login() {
 
   return (
     <div className="login-container">
-      {/* Orbital blocks moving in circular paths */}
+      {/* Orbital parallelograms - tangent to orbit (forming circular pattern) */}
       {orbitalBlocks.map((block) => {
         const radius = getRingRadius(block.ring);
-        const blockLength =
-          block.size *
-          (block.ring === 1 ? 2.3 : block.ring === 2 ? 2.8 : 3.2);
-        const blockThickness = Math.max(6, block.size * (block.ring === 3 ? 0.55 : 0.6));
-        const baseTilt = block.ring === 1 ? -8 : block.ring === 2 ? 12 : -5;
+
+        // Parallelograms with max 1:3 width-to-length ratio, some nearly square
+        // Size reduced by 20% (* 0.8), varies by ring
+        const sizeMultiplier = 0.8; // 20% reduction
+        const baseSize = block.ring >= 4
+          ? (14 + block.size * 0.35) * sizeMultiplier
+          : block.ring === 3
+            ? (12 + block.size * 0.3) * sizeMultiplier
+            : (8 + block.size * 0.25) * sizeMultiplier;
+
+        // Vary the aspect ratio: some 1:1.5, some 1:2, some 1:2.5, max 1:3
+        const aspectRatio = 1.5 + (block.id % 4) * 0.5;
+        const rectWidth = baseSize;
+        const rectHeight = baseSize * aspectRatio;
+
+        // Skew angle for parallelogram effect (varies by block for variety)
+        const skewAngle = 20 + (block.id % 5) * 5; // 20-40 degrees
 
         return (
           <motion.div
@@ -128,7 +173,7 @@ export default function Login() {
               top: '50%',
               width: 0,
               height: 0,
-              zIndex: 1,
+              zIndex: block.ring,
             }}
             initial={{ rotate: block.angle }}
             animate={{ rotate: block.angle + 360 }}
@@ -138,18 +183,19 @@ export default function Login() {
               ease: 'linear',
             }}
           >
+            {/* Parallelogram tangent to orbit */}
             <div
               className="floating-block"
               style={{
-                width: blockLength,
-                height: blockThickness,
+                width: rectWidth,
+                height: rectHeight,
                 background: block.shade,
-                border: '1px solid rgba(255, 255, 255, 0.08)',
                 position: 'absolute',
                 left: 0,
                 top: 0,
-                transform: `translate(-50%, -50%) translateX(${radius}px) rotate(${baseTilt}deg)`,
-                boxShadow: '0 0 12px rgba(0, 0, 0, 0.35)',
+                // Position at radius, centered, with skew for parallelogram shape
+                transform: `translateX(${radius}px) translate(-50%, -50%) skewY(${skewAngle}deg)`,
+                borderRadius: '2px',
               }}
             />
           </motion.div>
