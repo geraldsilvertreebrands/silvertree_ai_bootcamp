@@ -15,34 +15,41 @@ Internal SaaS tool for Silvertreebrand to manage staff access to systems across 
 - Docker and Docker Compose
 - npm
 
-## Setup
+## Setup (backend + seeded demo data)
 
-1. **Clone and install dependencies:**
-   ```bash
-   npm install
-   ```
+1) **Install dependencies**
+```bash
+npm install
+```
 
-2. **Start PostgreSQL with Docker:**
-   ```bash
-   docker-compose up -d
-   ```
+2) **Start Postgres (Docker)**
+```bash
+docker compose up -d postgres
+```
 
-3. **Copy environment file:**
-   ```bash
-   cp .env.example .env
-   ```
+3) **Create env**
+```bash
+cp .env.example .env
+```
+Fill in Slack/DB values as needed. Restart the backend after any `.env` change.
 
-4. **Run migrations:**
-   ```bash
-   npm run migration:run
-   ```
+4) **Run migrations**
+```bash
+npm run migration:run
+```
 
-5. **Start development server:**
-   ```bash
-   npm run start:dev
-   ```
+5) **Seed demo data (creates users, systems, grants)**
+```bash
+npm run seed
+```
 
-The API will be available at `http://localhost:3000`
+6) **Start backend**
+```bash
+npm run start:dev
+```
+
+- API: `http://localhost:3000`
+- Login UI served by backend at `http://localhost:3000/index.html`
 
 ## Development
 
